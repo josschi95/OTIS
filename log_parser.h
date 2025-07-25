@@ -6,6 +6,7 @@
 
 #include "database_manager.h"
 
+
 class LogParser
 {
 public:

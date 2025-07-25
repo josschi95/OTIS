@@ -1,6 +1,11 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QStandardItemModel>
+
+#include "database_manager.h"
+#include "testwindow.h"
+#include "filter_header.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -15,10 +20,15 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    void updateLogTable(const LogEntry &log);
 
 private slots:
-    void on_TEST_Log_Event_clicked();
+    void onTestWindowButtonClicked();
+    void onLogTableFiltersChanged();
 
 private:
     Ui::MainWindow *ui;
+    FilterHeader *header;
+    QStandardItemModel *model;
+    TestWindow *testWindow = nullptr;
 };

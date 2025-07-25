@@ -3,13 +3,14 @@
 #include <QObject>
 #include <QUdpSocket>
 
-// Binds to UDP Port 5140 and listens for syslog files
+
 class SyslogReceiver : public QObject
 {
     Q_OBJECT
 
 public:
     explicit SyslogReceiver(QObject *parent = nullptr);
+    void createSocket();
 
 signals:
     void logReceived(const QString &line);

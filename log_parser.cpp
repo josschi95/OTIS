@@ -4,6 +4,7 @@
 #include "log_parser.h"
 #include "database_manager.h"
 
+
 std::optional<LogEntry> LogParser::parse(const QString &line)
 {
     qDebug() << "LogParser parsing...";

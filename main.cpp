@@ -9,19 +9,22 @@
 
 int main(int argc, char *argv[])
 {
+    //QCoreApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
+
     QApplication app(argc, argv);
 
     DatabaseManager::instance();
     SyslogReceiver receiver;
+    MainWindow window;
 
-    QObject::connect(&receiver, &SyslogReceiver::logReceived, [&](const QString &line){
+    QObject::connect(&receiver, &SyslogReceiver::logReceived, &window, [&](const QString &line) {
         auto parsed = LogParser::parse(line);
         if (parsed.has_value()) {
             DatabaseManager::insertLog(parsed.value());
+            window.updateLogTable(parsed.value());
         }
     });
 
-    MainWindow window;
     window.show();
 
     return app.exec();

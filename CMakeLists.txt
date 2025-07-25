@@ -29,6 +29,14 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         log_parser.cpp
         database_manager.h
         database_manager.cpp
+
+
+        testwindow.h testwindow.cpp testwindow.ui
+        filter_header.h
+        filter_header.cpp
+
+
+
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET OTIS APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

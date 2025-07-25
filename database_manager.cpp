@@ -5,6 +5,7 @@
 
 #include "database_manager.h"
 
+
 // Need to do this since Qt doesn't like a static non-POD db
 QSqlDatabase& DatabaseManager::instance()
 {
