@@ -34,6 +34,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         testwindow.h testwindow.cpp testwindow.ui
         filter_header.h
         filter_header.cpp
+        TODO.txt
 
 
 

@@ -20,12 +20,18 @@ MainWindow::MainWindow(QWidget *parent)
 
     header = new FilterHeader(view);
     view->setHorizontalHeader(header);
+    // row numbers messes up alignment
+    view->verticalHeader()->setVisible(false);
 
     model = new QStandardItemModel(view);
     model->setHorizontalHeaderLabels({"Timestamp", "Source", "Hostname", "Message"});
     view->setModel(model);
 
     connect(header, &FilterHeader::filterActivated, this, &MainWindow::onLogTableFiltersChanged);
+
+    onTestWindowButtonClicked();
+
+    showLogs();
 }
 
 MainWindow::~MainWindow()
@@ -46,6 +52,16 @@ void MainWindow::onTestWindowButtonClicked()
 void MainWindow::onLogTableFiltersChanged()
 {
     qDebug() << "Filters changed";
+}
+
+void MainWindow::showLogs()
+{
+    // TESTING
+    auto rows = DatabaseManager::queryDB();
+    qDebug() << "DB query rows returned: " << rows.size();
+    for (const auto& row : rows) {
+        model->appendRow(row);
+    }
 }
 
 //TODO: Pull from db, don't use logEntry directly

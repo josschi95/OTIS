@@ -8,7 +8,9 @@
 std::optional<LogEntry> LogParser::parse(const QString &line)
 {
     qDebug() << "LogParser parsing...";
-    static const QRegularExpression re(R"((\w+\s+\d+\s[\d:]+)\s+(\S+)\s+(\S+):\s+(.*))");
+    //static const QRegularExpression re(R"((\w+\s+\d+\s[\d:]+)\s+(\S+)\s+(\S+):\s+(.*))");
+    static const QRegularExpression re(R"((\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)\s+(\S+)\s+(\S+):\s+(.*))");
+
     QRegularExpressionMatch match = re.match(line);
 
     if (match.hasMatch()) {
@@ -24,6 +26,8 @@ std::optional<LogEntry> LogParser::parse(const QString &line)
         qDebug() << "Log Message: " << result.message;
 
         return result;
+    } else {
+        qDebug() << "Could not parse " + line;
     }
 
     return std::nullopt;

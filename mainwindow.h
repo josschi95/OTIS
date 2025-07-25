@@ -21,6 +21,7 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     void updateLogTable(const LogEntry &log);
+    void showLogs();
 
 private slots:
     void onTestWindowButtonClicked();

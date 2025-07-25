@@ -1,4 +1,5 @@
 #include <QUdpSocket>
+#include <QDateTime>
 
 #include "testwindow.h"
 #include "ui_testwindow.h"
@@ -20,9 +21,12 @@ TestWindow::~TestWindow()
 // Generate a fake log to ingest
 void TestWindow::onFakeLogButtonClicked()
 {
-    qDebug() << "Button pressed";
+    QString line = QString("%1 host snort: Alert: Something happened").arg(
+        QDateTime::currentDateTimeUtc().toString(Qt::ISODate)
+        );
+    QByteArray msg = line.toUtf8();
+
     QUdpSocket* udpSocket = new QUdpSocket(this);
-    QByteArray msg = "<13>Jul 23 20:30:00 host snort: Alert: Something happened";
     QHostAddress address("127.0.0.1");
     quint16 port = 5140;
 
