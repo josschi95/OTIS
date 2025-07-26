@@ -3,7 +3,7 @@
 
 #include "testwindow.h"
 #include "ui_testwindow.h"
-
+#include "settings_manager.h"
 
 TestWindow::TestWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -21,8 +21,10 @@ TestWindow::~TestWindow()
 // Generate a fake log to ingest
 void TestWindow::onFakeLogButtonClicked()
 {
+    QTimeZone tz = SettingsManager::instance().currentTimeZone();
     QString line = QString("%1 host snort: Alert: Something happened").arg(
-        QDateTime::currentDateTimeUtc().toString(Qt::ISODate)
+        QDateTime::currentDateTime(tz).toString(Qt::ISODate)
+        //TODO: Variety in source/severity/message
         );
     QByteArray msg = line.toUtf8();
 

@@ -2,8 +2,9 @@
 
 #include <QHeaderView>
 #include <QVector>
-//#include <QString>
-//#include <QLineEdit>
+
+#include "database_manager.h"
+#include "customdatetimerangedialog.h"
 
 
 class FilterHeader : public QHeaderView
@@ -13,22 +14,23 @@ class FilterHeader : public QHeaderView
 public:
     explicit FilterHeader(QWidget *parent = nullptr);
 
-    void setFilterBoxes(const int count);
-    QString filterText(int index) const;
-    void setFilterText(int index, const QString &text);
-    void clearFilters();
-
-
     QSize sizeHint() const override;
     void updateGeometries() override;
 
+    void setFilterBoxes();
+    LogFilters getFilters();
+    void clearFilters();
+
 signals:
-    void filterActivated();
+    //void customDateTimeRangeActivated(const bool useCustom);
 
 private slots:
     void adjustPositions();
+    void dateTimeFilterActivated(int index);
 
 private:
     QVector<QWidget*> editors;
+    CustomDateTimeRangeDialog *dtDialog = nullptr;
+    QDateTime customStart, customEnd;
     int padding = 4;
 };

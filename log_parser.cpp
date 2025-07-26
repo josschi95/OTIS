@@ -20,15 +20,13 @@ std::optional<LogEntry> LogParser::parse(const QString &line)
         result.source = match.captured(3);
         result.message = match.captured(4);
 
-        qDebug() << "Log Timestamp: " << result.timestamp;
-        qDebug() << "Log Hostname: " << result.hostname;
-        qDebug() << "Log Source: " << result.source;
-        qDebug() << "Log Message: " << result.message;
-
+        //qDebug() << "Log Timestamp: " << result.timestamp;
+        //qDebug() << "Log Hostname: " << result.hostname;
+        //qDebug() << "Log Source: " << result.source;
+        //qDebug() << "Log Message: " << result.message;
         return result;
-    } else {
-        qDebug() << "Could not parse " + line;
     }
 
+    qDebug() << "Could not parse " + line;
     return std::nullopt;
 }

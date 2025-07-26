@@ -13,17 +13,20 @@ struct LogEntry {
     bool valid = false;
 };
 
+struct LogFilters {
+    QDateTime startDate = QDateTime();
+    QDateTime endDate = QDateTime();
+    QString sourceFilter = QString();
+    QString hostnameFilter = QString();
+    QString messageFilter = QString();
+};
+
 class DatabaseManager
 {
 public:
     static QSqlDatabase& instance();
     static void insertLog(const LogEntry& logEntry);
-    static QList<QList<QStandardItem*>> queryDB(
-        const QDateTime& startDate = QDateTime(),
-        const QDateTime& endDate = QDateTime(),
-        const QString& sourceFilter = QString(),
-        const QString& hostnameFilter = QString(),
-        const QString& messageFilter = QString());
+    static QList<QList<QStandardItem*>> queryDB(const LogFilters& filters);
 
 signals:
     void databaseUpdated();

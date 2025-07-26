@@ -13,6 +13,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     connect(ui->testWindowButton, &QPushButton::clicked, this, &MainWindow::onTestWindowButtonClicked);
+    connect(ui->refreshLogsButton, &QPushButton::clicked, this, &MainWindow::onRefreshLogTable);
 
     auto view = ui->tableView;
     auto *layout = new QVBoxLayout(this);
@@ -27,11 +28,9 @@ MainWindow::MainWindow(QWidget *parent)
     model->setHorizontalHeaderLabels({"Timestamp", "Source", "Hostname", "Message"});
     view->setModel(model);
 
-    connect(header, &FilterHeader::filterActivated, this, &MainWindow::onLogTableFiltersChanged);
-
     onTestWindowButtonClicked();
 
-    showLogs();
+    onRefreshLogTable();
 }
 
 MainWindow::~MainWindow()
@@ -49,18 +48,15 @@ void MainWindow::onTestWindowButtonClicked()
     testWindow->activateWindow();
 }
 
-void MainWindow::onLogTableFiltersChanged()
+void MainWindow::onRefreshLogTable()
 {
-    qDebug() << "Filters changed";
-}
+    model->removeRows(0, model->rowCount());
 
-void MainWindow::showLogs()
-{
-    // TESTING
-    auto rows = DatabaseManager::queryDB();
+    auto filters = header->getFilters();
+    auto rows = DatabaseManager::queryDB(filters);
     qDebug() << "DB query rows returned: " << rows.size();
-    for (const auto& row : rows) {
-        model->appendRow(row);
+    for (int i = 0; i < rows.size(); ++i) {
+        model->appendRow(rows[i]);
     }
 }
 

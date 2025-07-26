@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QComboBox>
 #include <QMainWindow>
 #include <QStandardItemModel>
 
@@ -25,11 +26,18 @@ public:
 
 private slots:
     void onTestWindowButtonClicked();
-    void onLogTableFiltersChanged();
+    void onRefreshLogTable();
 
 private:
     Ui::MainWindow *ui;
+
     FilterHeader *header;
     QStandardItemModel *model;
+    QComboBox *timestampFilter;
+    QLineEdit *sourceFilter;
+    QLineEdit *hostnameFilter;
+    QLineEdit *messageFilter;
+
+    //TESTING
     TestWindow *testWindow = nullptr;
 };

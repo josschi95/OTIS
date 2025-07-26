@@ -35,6 +35,9 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         filter_header.h
         filter_header.cpp
         TODO.txt
+        customdatetimerangedialog.h customdatetimerangedialog.cpp customdatetimerangedialog.ui
+        settings_manager.h
+        settings_manager.cpp
 
 
 

@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <QTimeZone> // TESTING
 
 #include "mainwindow.h"
 #include "syslog_receiver.h"
@@ -9,9 +10,11 @@
 
 int main(int argc, char *argv[])
 {
-    //QCoreApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
-
     QApplication app(argc, argv);
+
+    QTimeZone tz = QTimeZone("America/New_York");
+    if (tz.isValid()) qDebug() << "tz good";
+    else qDebug() << "tz bad";
 
     DatabaseManager::instance();
     SyslogReceiver receiver;

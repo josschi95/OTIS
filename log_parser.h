@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QString>
-#include <QMap>
 #include <optional>
 
 #include "database_manager.h"

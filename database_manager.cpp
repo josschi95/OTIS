@@ -10,6 +10,7 @@
 
 
 // Need to do this since Qt doesn't like a static non-POD db
+// There's *probably* a better way to do this... I just don't know it
 QSqlDatabase& DatabaseManager::instance()
 {
     static bool initialized = false;
@@ -66,29 +67,35 @@ void DatabaseManager::insertLog(const LogEntry& logEntry)
     }
 }
 
-QList<QList<QStandardItem*>> DatabaseManager::queryDB(
-    const QDateTime& startDate = QDateTime(),
-    const QDateTime& endDate = QDateTime(),
-    const QString& sourceFilter = QString(),
-    const QString& hostnameFilter = QString(),
-    const QString& messageFilter = QString())
+QList<QList<QStandardItem*>> DatabaseManager::queryDB(const LogFilters& filters)
 {
     QString sql = "SELECT timestamp, source, hostname, message FROM logs WHERE 1=1";
 
-    if (startDate.isValid()) sql += " AND timestamp >= :start";
-    if (endDate.isValid()) sql += " AND timestamp <= :end";
-    if (!sourceFilter.isEmpty()) sql += " AND source = :source";
-    if (!hostnameFilter.isEmpty()) sql += " AND source = :hostname";
-    //TODO messageFilter
+    if (filters.startDate.isValid())
+        sql += " AND timestamp >= :start";
+    if (filters.endDate.isValid())
+        sql += " AND timestamp <= :end";
+    if (!filters.sourceFilter.isEmpty())
+        sql += " AND source LIKE :source";
+    if (!filters.hostnameFilter.isEmpty())
+        sql += " AND hostname LIKE :hostname";
+    if (!filters.messageFilter.isEmpty())
+        sql += " AND message LIKE :message";
     sql += " ORDER BY timestamp DESC";
 
     QSqlQuery query(instance());
     query.prepare(sql);
 
-    if (startDate.isValid()) query.bindValue(":start", startDate.toString(Qt::ISODate));
-    if (endDate.isValid()) query.bindValue(":end", endDate.toString(Qt::ISODate));
-    if (!sourceFilter.isEmpty()) query.bindValue(":source", sourceFilter);
-    if (!hostnameFilter.isEmpty()) query.bindValue(":hostname", hostnameFilter);
+    if (filters.startDate.isValid())
+        query.bindValue(":start", filters.startDate.toString(Qt::ISODate));
+    if (filters.endDate.isValid())
+        query.bindValue(":end", filters.endDate.toString(Qt::ISODate));
+    if (!filters.sourceFilter.isEmpty())
+        query.bindValue(":source", filters.sourceFilter);
+    if (!filters.hostnameFilter.isEmpty())
+        query.bindValue(":hostname", filters.hostnameFilter);
+    if (!filters.messageFilter.isEmpty())
+        query.bindValue(":message", filters.messageFilter);
 
     //QSqlQuery query("SELECT timestamp, source, hostname, message FROM logs ORDER BY timestamp DESC", instance());
     QList<QList<QStandardItem*>> rows;
