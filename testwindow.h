@@ -20,4 +20,6 @@ private slots:
 
 private:
     Ui::TestWindow *ui;
+    void sendTestLog(QByteArray log);
+    void foo();
 };

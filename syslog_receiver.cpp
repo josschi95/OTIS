@@ -2,17 +2,26 @@
 #include <QDebug>
 
 #include "syslog_receiver.h"
+#include "settings_manager.h"
 
 
 SyslogReceiver::SyslogReceiver(QObject *parent) : QObject(parent)
 {
     createSocket();
+    connect(SettingsManager::instance(), &SettingsManager::syslogPortChanged, this, &SyslogReceiver::createSocket);
 }
 
 void SyslogReceiver::createSocket()
 {
-    QSettings settings("config.ini", QSettings::IniFormat);
-    int port = settings.value("port", 5140).toInt();
+    int port = SettingsManager::instance()->getPort();
+
+    // Tear down old socket
+    if (udpSocket) {
+        qDebug() << "Tearing down old socket";
+        udpSocket->close();
+        udpSocket->deleteLater();
+        udpSocket = nullptr;
+    }
 
     udpSocket = new QUdpSocket(this);
     udpSocket->bind(QHostAddress::Any, port);
@@ -22,7 +31,7 @@ void SyslogReceiver::createSocket()
 void SyslogReceiver::processPendingDatagrams()
 {
     while (udpSocket->hasPendingDatagrams()) {
-        qDebug() << "SyslogReceiver processing datagram";
+        //qDebug() << "SyslogReceiver processing datagram";
         QByteArray datagram;
         datagram.resize(static_cast<int>(udpSocket->pendingDatagramSize()));
         udpSocket->readDatagram(datagram.data(), datagram.size());

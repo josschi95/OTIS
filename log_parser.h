@@ -1,13 +1,21 @@
 #pragma once
 
+#include <QMap>
 #include <QString>
-#include <optional>
 
 #include "database_manager.h"
 
 
-class LogParser
+class LogParser : public QObject
 {
+    Q_OBJECT
+
 public:
-    static std::optional<LogEntry> parse(const QString &line);
+    explicit LogParser(QObject *parent = nullptr);
+    LogEntry parse(const QString &line);
+
+private:
+    QMap<QString, LogFormat> logFormats;
+    QDateTime parseTimestamp(const QString& ts, const QString& format);
+
 };

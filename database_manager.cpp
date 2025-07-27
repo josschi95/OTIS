@@ -41,8 +41,6 @@ QSqlDatabase& DatabaseManager::instance()
                 std::abort(); // Crash... gracefully
             }
         }
-
-        qDebug() << "DB Path:" << QFileInfo(db.databaseName()).absoluteFilePath();
         initialized = true;
     }
 
@@ -51,7 +49,7 @@ QSqlDatabase& DatabaseManager::instance()
 
 void DatabaseManager::insertLog(const LogEntry& logEntry)
 {
-    qDebug() << "Database manager inserting log";
+    //qDebug() << "Database manager inserting log";
     QSqlQuery query;
     query.prepare(R"(
         INSERT INTO logs (timestamp, source, hostname, message)

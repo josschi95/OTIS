@@ -24,7 +24,7 @@ CustomDateTimeRangeDialog::~CustomDateTimeRangeDialog()
 // Should be called anytime the QComboBox is set to anyting but Custom
 void CustomDateTimeRangeDialog::reset()
 {
-    QTimeZone tz = SettingsManager::instance().currentTimeZone();
+    QTimeZone tz = SettingsManager::instance()->currentTimeZone();
     ui->startDateTimeEdit->setDateTime(QDateTime::currentDateTime(tz));
     ui->endDateTimeEdit->setDateTime(QDateTime::currentDateTime(tz));
 }

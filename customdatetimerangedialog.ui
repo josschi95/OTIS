@@ -66,6 +66,12 @@
         <height>0</height>
        </size>
       </property>
+      <property name="displayFormat">
+       <string>yyyy-MM-ddTHH:mm:ss</string>
+      </property>
+      <property name="calendarPopup">
+       <bool>true</bool>
+      </property>
      </widget>
     </item>
     <item>
@@ -91,6 +97,12 @@
         <width>200</width>
         <height>0</height>
        </size>
+      </property>
+      <property name="displayFormat">
+       <string>yyyy-MM-ddTHH:mm:ss</string>
+      </property>
+      <property name="calendarPopup">
+       <bool>true</bool>
       </property>
      </widget>
     </item>

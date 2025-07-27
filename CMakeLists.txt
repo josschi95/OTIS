@@ -38,6 +38,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         customdatetimerangedialog.h customdatetimerangedialog.cpp customdatetimerangedialog.ui
         settings_manager.h
         settings_manager.cpp
+        log_format.json
 
 
 
@@ -59,6 +60,9 @@ else()
         )
     endif()
 endif()
+
+# Copy the JSON config file next to the binary
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/log_format.json ${CMAKE_CURRENT_BINARY_DIR}/log_format.json COPYONLY)
 
 target_link_libraries(OTIS PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt6::Network Qt6::Sql)
 

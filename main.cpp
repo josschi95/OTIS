@@ -12,20 +12,15 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    QTimeZone tz = QTimeZone("America/New_York");
-    if (tz.isValid()) qDebug() << "tz good";
-    else qDebug() << "tz bad";
-
     DatabaseManager::instance();
     SyslogReceiver receiver;
     MainWindow window;
+    LogParser parser;
 
     QObject::connect(&receiver, &SyslogReceiver::logReceived, &window, [&](const QString &line) {
-        auto parsed = LogParser::parse(line);
-        if (parsed.has_value()) {
-            DatabaseManager::insertLog(parsed.value());
-            window.updateLogTable(parsed.value());
-        }
+        auto parsed = parser.parse(line);
+        DatabaseManager::insertLog(parsed);
+        window.updateLogTable(parsed);
     });
 
     window.show();

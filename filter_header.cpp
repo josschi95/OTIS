@@ -135,7 +135,7 @@ LogFilters FilterHeader::getFilters()
 
     // Timestamp
     auto* comboBox = qobject_cast<QComboBox*>(editors[0]);
-    QTimeZone tz = SettingsManager::instance().currentTimeZone();
+    QTimeZone tz = SettingsManager::instance()->currentTimeZone();
     switch (comboBox->currentIndex()) {
     case 0: break; // "All Time" leave default (invalid) QDateTimes
     case 1: // "Last Hour"
@@ -166,7 +166,7 @@ LogFilters FilterHeader::getFilters()
     if (!messageFilter->text().isEmpty()) filters.messageFilter = messageFilter->text();
 
     // TESTING
-    qDebug() << "Printing Filters";
+    /*qDebug() << "Printing Filters";
     if (filters.startDate.isValid())
         qDebug() << "Timestamp Filter: " << filters.startDate.toString();
     if (!filters.sourceFilter.isEmpty())
@@ -174,7 +174,7 @@ LogFilters FilterHeader::getFilters()
     if (!filters.hostnameFilter.isEmpty())
         qDebug() << "Hostname Filter: " << filters.hostnameFilter;
     if (!filters.messageFilter.isEmpty())
-        qDebug() << "Message Filter: " << filters.messageFilter;
+        qDebug() << "Message Filter: " << filters.messageFilter;*/
     // TESTING
 
     return filters;

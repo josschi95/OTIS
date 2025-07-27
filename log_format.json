@@ -1,0 +1,26 @@
+{
+    "example": {
+        "//": "The SIEM will attempt to parse all incoming logs into a LogEntry object, according to parameters defined in the following fields.",
+        "method": "regex OR json",
+        "pattern": "if method is regex, the pattern to separate components, else use comma-separated values (e.g: timestamp, pkt_num, proto, pkt_len, dir, src_ap, dst_ap, rule, action)",
+        "///": "if method is json, use kvp to map LogEntry fields to log fields",
+        "kvp": {
+            "timestamp": "timestamp",
+            "hostname": "host",
+            "source": "src_ap",
+            "message": "msg"
+        },
+        "dateFormat":  "Can be one of [TextDate, ISO8601, RFC2822] OR a specific format (e.g. MM/dd-HH:mm:ss.zzz).
+                        See Qt documentation on QDateTime::fromString() for more info"
+    },
+    "snort": {
+        "method": "regex",
+        "pattern": "^(?<timestamp>\\S+)\\s+(?<host>\\S+)\\s+snort:\\s+(?<message>.*)$",
+        "dateFormat": "ISO8601"
+    },
+    "plc": {
+        "method": "regex",
+        "pattern": "^(?<timestamp>\\S+)\\s+(?<device>\\S+)\\s+PLC:\\s+(?<message>.*)$",
+        "dateFormat": "ISO8601"
+    }
+}

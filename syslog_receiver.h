@@ -4,6 +4,7 @@
 #include <QUdpSocket>
 
 
+// Creates a UDP Socket and listens for incoming logs, then passes them off to LogParser
 class SyslogReceiver : public QObject
 {
     Q_OBJECT
@@ -19,5 +20,5 @@ private slots:
     void processPendingDatagrams();
 
 private:
-    QUdpSocket *udpSocket;
+    QUdpSocket *udpSocket = nullptr;
 };
