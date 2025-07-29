@@ -29,9 +29,10 @@ QSqlDatabase& DatabaseManager::instance()
             query.exec(R"(
                 CREATE TABLE IF NOT EXISTS logs (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    priority NUMBER,
                     timestamp TEXT,
-                    source TEXT,
-                    hostname TEXT,
+                    host TEXT,
+                    app TEXT,
                     message TEXT
                 )
             )");
@@ -52,12 +53,13 @@ void DatabaseManager::insertLog(const LogEntry& logEntry)
     //qDebug() << "Database manager inserting log";
     QSqlQuery query;
     query.prepare(R"(
-        INSERT INTO logs (timestamp, source, hostname, message)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO logs (priority, timestamp, host, app, message)
+        VALUES (?, ?, ?, ?, ?)
     )");
+    query.addBindValue(logEntry.priority);
     query.addBindValue(logEntry.timestamp);
-    query.addBindValue(logEntry.source);
-    query.addBindValue(logEntry.hostname);
+    query.addBindValue(logEntry.host);
+    query.addBindValue(logEntry.app);
     query.addBindValue(logEntry.message);
 
     if (!query.exec()) {
@@ -67,16 +69,16 @@ void DatabaseManager::insertLog(const LogEntry& logEntry)
 
 QList<QList<QStandardItem*>> DatabaseManager::queryDB(const LogFilters& filters)
 {
-    QString sql = "SELECT timestamp, source, hostname, message FROM logs WHERE 1=1";
+    QString sql = "SELECT priority, timestamp, host, app, message FROM logs WHERE 1=1";
 
     if (filters.startDate.isValid())
         sql += " AND timestamp >= :start";
     if (filters.endDate.isValid())
         sql += " AND timestamp <= :end";
-    if (!filters.sourceFilter.isEmpty())
-        sql += " AND source LIKE :source";
-    if (!filters.hostnameFilter.isEmpty())
-        sql += " AND hostname LIKE :hostname";
+    if (!filters.hostFilter.isEmpty())
+        sql += " AND host LIKE :host";
+    if (!filters.appFilter.isEmpty())
+        sql += " AND app LIKE :app";
     if (!filters.messageFilter.isEmpty())
         sql += " AND message LIKE :message";
     sql += " ORDER BY timestamp DESC";
@@ -88,14 +90,13 @@ QList<QList<QStandardItem*>> DatabaseManager::queryDB(const LogFilters& filters)
         query.bindValue(":start", filters.startDate.toString(Qt::ISODate));
     if (filters.endDate.isValid())
         query.bindValue(":end", filters.endDate.toString(Qt::ISODate));
-    if (!filters.sourceFilter.isEmpty())
-        query.bindValue(":source", filters.sourceFilter);
-    if (!filters.hostnameFilter.isEmpty())
-        query.bindValue(":hostname", filters.hostnameFilter);
+    if (!filters.hostFilter.isEmpty())
+        query.bindValue(":host", filters.hostFilter);
+    if (!filters.appFilter.isEmpty())
+        query.bindValue(":app", filters.appFilter);
     if (!filters.messageFilter.isEmpty())
         query.bindValue(":message", filters.messageFilter);
 
-    //QSqlQuery query("SELECT timestamp, source, hostname, message FROM logs ORDER BY timestamp DESC", instance());
     QList<QList<QStandardItem*>> rows;
     if (!query.exec()) {
         qWarning() << "Database query failed: " << query.lastError().text();
@@ -104,10 +105,11 @@ QList<QList<QStandardItem*>> DatabaseManager::queryDB(const LogFilters& filters)
 
     while (query.next()) {
         QList<QStandardItem*> row;
-        row << new QStandardItem(query.value(0).toString()); // timestamp
-        row << new QStandardItem(query.value(1).toString()); // source
+        row << new QStandardItem(query.value(0).toString()); // priority
+        row << new QStandardItem(query.value(1).toString()); // timestamp
         row << new QStandardItem(query.value(2).toString()); // host
-        row << new QStandardItem(query.value(3).toString()); // message
+        row << new QStandardItem(query.value(3).toString()); // app
+        row << new QStandardItem(query.value(4).toString()); // message
         rows.append(row);
     }
     return rows;

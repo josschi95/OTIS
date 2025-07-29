@@ -1,26 +1,20 @@
 {
     "example": {
         "//": "The SIEM will attempt to parse all incoming logs into a LogEntry object, according to parameters defined in the following fields.",
-        "method": "regex OR json",
-        "pattern": "if method is regex, the pattern to separate components, else use comma-separated values (e.g: timestamp, pkt_num, proto, pkt_len, dir, src_ap, dst_ap, rule, action)",
-        "///": "if method is json, use kvp to map LogEntry fields to log fields",
-        "kvp": {
-            "timestamp": "timestamp",
-            "hostname": "host",
-            "source": "src_ap",
-            "message": "msg"
-        },
+        "pattern": "the regex pattern used to parse the log (use named components) rfc3164 splits TAG into APP-NAME and PROCID for uniformity with RFC5424",
         "dateFormat":  "Can be one of [TextDate, ISO8601, RFC2822] OR a specific format (e.g. MM/dd-HH:mm:ss.zzz).
                         See Qt documentation on QDateTime::fromString() for more info"
     },
-    "snort": {
+
+    "rfc3164": {
         "method": "regex",
-        "pattern": "^(?<timestamp>\\S+)\\s+(?<host>\\S+)\\s+snort:\\s+(?<message>.*)$",
-        "dateFormat": "ISO8601"
+        "pattern": "^<(?<pri>\\d{1,3})>(?<timestamp>[A-Z][a-z]{2}\\s+\\d{1,2}\\s+\\d{2}:\\d{2}:\\d{2})\\s+(?<host>\\S+)\\s+(?<app_name>[^\\[:\\s]+)(?:\\[(?<procid>\\d+)\\])?:\\s+(?<msg>.*)",
+        "dateFormat": "MMM d HH:mm:ss"
     },
-    "plc": {
+    "rfc5424": {
         "method": "regex",
-        "pattern": "^(?<timestamp>\\S+)\\s+(?<device>\\S+)\\s+PLC:\\s+(?<message>.*)$",
+        "pattern": "^<(?<pri>\\d{1,3})>(?<version>\\d)\\s+(?<timestamp>\\S+)\\s+(?<host>\\S+)\\s+(?<app_name>\\S+)\\s+(?<procid>\\S+)\\s+(?<msgid>\\S+)\\s+(?<structured_data>-|\\[(?:[^\\\\\\]]|\\\\.)*?\\])\\s*(?<msg>.*)?$",
+        "//pattern": "^<(?<pri>\\d{1,3})>(?<version>\\d)\\s+(?<timestamp>\\S+)\\s+(?<host>\\S+)\\s+(?<app_name>\\S+)\\s+(?<procid>\\S+)\\s+(?<msgid>\\S+)\\s+(?<structured_data>(?:\\[.*?\\]|-))\\s*(?<msg>.*)?$",
         "dateFormat": "ISO8601"
     }
 }

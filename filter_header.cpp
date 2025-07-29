@@ -33,8 +33,8 @@ void FilterHeader::setFilterBoxes()
         editor->deleteLater();
     }
 
-    for (int i = 0; i < 4; ++i) {
-        if (i == 0) {
+    for (int i = 0; i < 5; ++i) {
+        if (i == timestampIndex) {
             QComboBox* comboBox = new QComboBox(parentWidget());
             comboBox->addItems({"All Time", "Last Hour", "Last 24 Hours", "Last 7 Days", "Custom"});
             comboBox->show();
@@ -134,7 +134,7 @@ LogFilters FilterHeader::getFilters()
     LogFilters filters;
 
     // Timestamp
-    auto* comboBox = qobject_cast<QComboBox*>(editors[0]);
+    auto* comboBox = qobject_cast<QComboBox*>(editors[timestampIndex]);
     QTimeZone tz = SettingsManager::instance()->currentTimeZone();
     switch (comboBox->currentIndex()) {
     case 0: break; // "All Time" leave default (invalid) QDateTimes
@@ -153,26 +153,26 @@ LogFilters FilterHeader::getFilters()
         break;
     }
 
-    // Source
-    auto* sourceFilter = qobject_cast<QLineEdit*>(editors[1]);
-    if (!sourceFilter->text().isEmpty()) filters.sourceFilter = sourceFilter->text();
+    // Host
+    auto* hostFilter = qobject_cast<QLineEdit*>(editors[2]);
+    if (!hostFilter->text().isEmpty()) filters.hostFilter = hostFilter->text();
 
-    // Hostname
-    auto* hostnameFilter = qobject_cast<QLineEdit*>(editors[2]);
-    if (!hostnameFilter->text().isEmpty()) filters.hostnameFilter = hostnameFilter->text();
+    // App/Process
+    auto* appFilter = qobject_cast<QLineEdit*>(editors[3]);
+    if (!appFilter->text().isEmpty()) filters.appFilter = appFilter->text();
 
     // Message
-    auto* messageFilter = qobject_cast<QLineEdit*>(editors[3]);
+    auto* messageFilter = qobject_cast<QLineEdit*>(editors[4]);
     if (!messageFilter->text().isEmpty()) filters.messageFilter = messageFilter->text();
 
     // TESTING
     /*qDebug() << "Printing Filters";
     if (filters.startDate.isValid())
         qDebug() << "Timestamp Filter: " << filters.startDate.toString();
-    if (!filters.sourceFilter.isEmpty())
-        qDebug() << "Source Filter: " << filters.sourceFilter;
-    if (!filters.hostnameFilter.isEmpty())
-        qDebug() << "Hostname Filter: " << filters.hostnameFilter;
+    if (!filters.appFilter.isEmpty())
+        qDebug() << "App Filter: " << filters.tagFilter;
+    if (!filters.hostFilter.isEmpty())
+        qDebug() << "Host Filter: " << filters.hostFilter;
     if (!filters.messageFilter.isEmpty())
         qDebug() << "Message Filter: " << filters.messageFilter;*/
     // TESTING

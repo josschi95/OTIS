@@ -33,4 +33,5 @@ private:
     CustomDateTimeRangeDialog *dtDialog = nullptr;
     QDateTime customStart, customEnd;
     int padding = 4;
+    static constexpr int timestampIndex = 1;
 };

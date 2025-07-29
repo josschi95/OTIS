@@ -33,9 +33,11 @@ private:
 
     FilterHeader *header;
     QStandardItemModel *model;
+
+    //TODO: Priority Filter
     QComboBox *timestampFilter;
-    QLineEdit *sourceFilter;
-    QLineEdit *hostnameFilter;
+    QLineEdit *hostFilter;
+    QLineEdit *tagFilter;
     QLineEdit *messageFilter;
 
     //TESTING

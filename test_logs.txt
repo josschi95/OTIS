@@ -1,0 +1,6 @@
+<13>Oct 22 12:34:56 myhostname myapp[1234]: This is a sample syslog message.
+<35>Oct 12 22:14:15 client_machine su: 'su root' failed for joe on /dev/pts/2
+<13>Jul 29 12:34:56 myhost sshd[1234]: Accepted password for user
+<30>Jul 1 09:00:00 servername cron: Job started
+<165>1 2003-10-11T22:14:15.003Z myhostname myapp 1234 ID47 - [exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"] An application event log entry...
+<35>1 2013-10-11T22:14:15.003Z client_machine su - - - 'su root' failed for joe on /dev/pts/2

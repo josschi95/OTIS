@@ -25,7 +25,7 @@ MainWindow::MainWindow(QWidget *parent)
     view->verticalHeader()->setVisible(false);
 
     model = new QStandardItemModel(view);
-    model->setHorizontalHeaderLabels({"Timestamp", "Source", "Hostname", "Message"});
+    model->setHorizontalHeaderLabels({"Priority", "Timestamp", "Host", "App", "Message"});
     view->setModel(model);
 
     onTestWindowButtonClicked();
@@ -64,18 +64,19 @@ void MainWindow::onRefreshLogTable()
 void MainWindow::updateLogTable(const LogEntry &logEntry)
 {
     //auto view = ui->tableView;
-    QList<QStandardItem*> rowItems;
-    rowItems << new QStandardItem(logEntry.timestamp)
-             << new QStandardItem(logEntry.source)
-             << new QStandardItem(logEntry.hostname)
-             << new QStandardItem(logEntry.message);
-    model->appendRow(rowItems);
+    QList<QStandardItem*> row;
+    row << new QStandardItem(QString::number(logEntry.priority))
+        << new QStandardItem(logEntry.timestamp)
+        << new QStandardItem(logEntry.host)
+        << new QStandardItem(logEntry.app)
+        << new QStandardItem(logEntry.message);
+    model->appendRow(row);
 
     // Old
-    int row = ui->logTable->rowCount();
-    ui->logTable->insertRow(row);
-    ui->logTable->setItem(row, 0, new QTableWidgetItem(logEntry.timestamp));
-    ui->logTable->setItem(row, 1, new QTableWidgetItem(logEntry.hostname));
-    ui->logTable->setItem(row, 2, new QTableWidgetItem(logEntry.source));
-    ui->logTable->setItem(row, 3, new QTableWidgetItem(logEntry.message));
+    //int row = ui->logTable->rowCount();
+    //ui->logTable->insertRow(row);
+    //ui->logTable->setItem(row, 0, new QTableWidgetItem(logEntry.timestamp));
+    //ui->logTable->setItem(row, 1, new QTableWidgetItem(logEntry.host));
+    //ui->logTable->setItem(row, 2, new QTableWidgetItem(logEntry.app));
+    //ui->logTable->setItem(row, 3, new QTableWidgetItem(logEntry.message));
 }

@@ -1,4 +1,3 @@
-#include <QSettings>
 #include <QDebug>
 
 #include "syslog_receiver.h"
@@ -15,9 +14,8 @@ void SyslogReceiver::createSocket()
 {
     int port = SettingsManager::instance()->getPort();
 
-    // Tear down old socket
     if (udpSocket) {
-        qDebug() << "Tearing down old socket";
+        //qDebug() << "Tearing down old socket";
         udpSocket->close();
         udpSocket->deleteLater();
         udpSocket = nullptr;
