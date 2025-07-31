@@ -2,11 +2,11 @@
 
 #include <QComboBox>
 #include <QMainWindow>
-#include <QStandardItemModel>
+//#include <QStandardItemModel>
 
-#include "database_manager.h"
+//#include "database_manager.h"
 #include "testwindow.h"
-#include "filter_header.h"
+//#include "filter_header.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -21,18 +21,20 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    void updateLogTable(const LogEntry &log);
+    //void updateLogTable(const LogEntry &log);
+    void addRow(const QStringList& log);
     void showLogs();
 
 private slots:
     void onTestWindowButtonClicked();
     void onRefreshLogTable();
+    void changePage(int index);
 
 private:
     Ui::MainWindow *ui;
 
-    FilterHeader *header;
-    QStandardItemModel *model;
+    //FilterHeader *header;
+    //QStandardItemModel *model;
 
     //TODO: Priority Filter
     QComboBox *timestampFilter;

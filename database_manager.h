@@ -5,6 +5,16 @@
 #include <QDateTime>
 #include <QMap>
 
+enum class Severity {
+    Emergency,
+    Alert,
+    Critical,
+    Error,
+    Warning,
+    Notice,
+    Informational,
+    Debug,
+};
 
 struct LogFormat {
     QString pattern;
@@ -18,29 +28,33 @@ struct LogEntry {
     int priority; // (Facility * 8) + Severity
     int version; // RFC 5424 only
     QString timestamp;
-    QString host;
-    QString app;
-    QString pid;
+    QString hostname;
+    QString appname;
+    QString procid;
     QString msgid; // RFC 5424 only
-    QString data; // RFC 5424 only
-    QString message;
+    QString structureddata; // RFC 5424 only
+    QString msg;
 
-    int getFacility()
+    int getFacility() const
     {
         return priority / 8;
     }
 
-    int getSeverity()
+    int getSeverity() const
     {
         return priority % 8;
     }
 };
 
 struct LogFilters {
+    int severity = static_cast<int>(Severity::Debug);
+
     QDateTime startDate = QDateTime();
     QDateTime endDate = QDateTime();
     QString hostFilter = QString();
     QString appFilter = QString();
+    QString procFilter = QString();
+    QString msgIDFilter = QString();
     QString messageFilter = QString();
 };
 
@@ -48,12 +62,13 @@ class DatabaseManager
 {
 public:
     static QSqlDatabase& instance();
-    static void insertLog(const LogEntry& logEntry);
-    static QList<QList<QStandardItem*>> queryDB(const LogFilters& filters);
+    static QStringList insertLog(const LogEntry& logEntry);
+    static QList<QStringList> queryDB(const LogFilters& filters);
 
 signals:
     void databaseUpdated();
 
 private:
     DatabaseManager() = default;
+    static QStringList getRow(const QSqlQuery& query);
 };

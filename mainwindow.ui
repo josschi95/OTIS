@@ -6,203 +6,255 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>838</width>
-    <height>621</height>
+    <width>1182</width>
+    <height>678</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QTabWidget" name="tabWidget">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>0</y>
-      <width>831</width>
-      <height>551</height>
-     </rect>
-    </property>
-    <property name="currentIndex">
-     <number>2</number>
-    </property>
-    <widget class="QWidget" name="overview">
-     <attribute name="title">
-      <string>Overview</string>
-     </attribute>
-     <widget class="QPushButton" name="testWindowButton">
-      <property name="geometry">
-       <rect>
-        <x>700</x>
-        <y>10</y>
-        <width>86</width>
-        <height>26</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>TEST</string>
-      </property>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QStackedWidget" name="stackedWidget">
+      <widget class="QWidget" name="idx0_overview">
+       <widget class="QComboBox" name="overviewPageSelect">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>122</width>
+          <height>26</height>
+         </rect>
+        </property>
+        <item>
+         <property name="text">
+          <string>Overview</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Devices</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Rules</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Logs</string>
+         </property>
+        </item>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="idx1_devices">
+       <widget class="QComboBox" name="devicesPageSelect">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>122</width>
+          <height>26</height>
+         </rect>
+        </property>
+        <item>
+         <property name="text">
+          <string>Overview</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Devices</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Rules</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Logs</string>
+         </property>
+        </item>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="idx2_rules">
+       <widget class="QComboBox" name="rulesPageSelect">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>122</width>
+          <height>26</height>
+         </rect>
+        </property>
+        <item>
+         <property name="text">
+          <string>Overview</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Devices</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Rules</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Logs</string>
+         </property>
+        </item>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="idx3_logs">
+       <widget class="QFrame" name="frame_3">
+        <property name="geometry">
+         <rect>
+          <x>-5</x>
+          <y>30</y>
+          <width>1181</width>
+          <height>591</height>
+         </rect>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::Shape::StyledPanel</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Shadow::Raised</enum>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_6">
+         <item>
+          <widget class="QTableWidget" name="logTable">
+           <property name="verticalScrollBarPolicy">
+            <enum>Qt::ScrollBarPolicy::ScrollBarAsNeeded</enum>
+           </property>
+           <property name="sortingEnabled">
+            <bool>true</bool>
+           </property>
+           <attribute name="horizontalHeaderDefaultSectionSize">
+            <number>140</number>
+           </attribute>
+           <column>
+            <property name="text">
+             <string>Severity</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Facility</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Timestamp</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Hostname</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>App</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>PID</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>MsgID</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Message</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="horizontalLayoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>381</width>
+          <height>28</height>
+         </rect>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QComboBox" name="logsPageSelect">
+           <item>
+            <property name="text">
+             <string>Overview</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Devices</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Rules</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Logs</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="tableFiltersButton">
+           <property name="text">
+            <string>Filters</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="refreshTableButton">
+           <property name="text">
+            <string>Refresh</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
      </widget>
-    </widget>
-    <widget class="QWidget" name="logs">
-     <attribute name="title">
-      <string>Logs</string>
-     </attribute>
-     <widget class="QTableWidget" name="logTable">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>70</y>
-        <width>831</width>
-        <height>451</height>
-       </rect>
-      </property>
-      <property name="verticalScrollBarPolicy">
-       <enum>Qt::ScrollBarPolicy::ScrollBarAsNeeded</enum>
-      </property>
-      <property name="sortingEnabled">
-       <bool>true</bool>
-      </property>
-      <attribute name="horizontalHeaderDefaultSectionSize">
-       <number>140</number>
-      </attribute>
-      <row>
-       <property name="text">
-        <string>000</string>
-       </property>
-      </row>
-      <column>
-       <property name="text">
-        <string>Timestamp</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Source</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Host Name</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Message</string>
-       </property>
-      </column>
-     </widget>
-     <widget class="QLineEdit" name="lineEdit">
-      <property name="geometry">
-       <rect>
-        <x>170</x>
-        <y>40</y>
-        <width>131</width>
-        <height>26</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QComboBox" name="comboBox">
-      <property name="geometry">
-       <rect>
-        <x>30</x>
-        <y>40</y>
-        <width>130</width>
-        <height>25</height>
-       </rect>
-      </property>
-      <item>
-       <property name="text">
-        <string>Last 24 Hours</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>All Time</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Last Hour</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Last 7 Days</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Custom...</string>
-       </property>
-      </item>
-     </widget>
-     <widget class="QLineEdit" name="lineEdit_2">
-      <property name="geometry">
-       <rect>
-        <x>310</x>
-        <y>40</y>
-        <width>113</width>
-        <height>26</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QLineEdit" name="lineEdit_3">
-      <property name="geometry">
-       <rect>
-        <x>450</x>
-        <y>40</y>
-        <width>113</width>
-        <height>26</height>
-       </rect>
-      </property>
-     </widget>
-    </widget>
-    <widget class="QWidget" name="testTab">
-     <attribute name="title">
-      <string>Page</string>
-     </attribute>
-     <widget class="QTableView" name="tableView">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>70</y>
-        <width>831</width>
-        <height>451</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="refreshLogsButton">
-      <property name="geometry">
-       <rect>
-        <x>740</x>
-        <y>0</y>
-        <width>86</width>
-        <height>26</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Refresh</string>
-      </property>
-     </widget>
-    </widget>
-   </widget>
+    </item>
+   </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>838</width>
+     <width>1182</width>
      <height>23</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuOTIS_Operational_Technology_Insight_Security_2">
+   <widget class="QMenu" name="menuBarLabel">
     <property name="title">
      <string>OTIS - Operational Technology Insight &amp; Security</string>
     </property>
    </widget>
-   <addaction name="menuOTIS_Operational_Technology_Insight_Security_2"/>
+   <addaction name="menuBarLabel"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>

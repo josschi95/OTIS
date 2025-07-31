@@ -29,12 +29,12 @@ void CustomDateTimeRangeDialog::reset()
     ui->endDateTimeEdit->setDateTime(QDateTime::currentDateTime(tz));
 }
 
-QDateTime CustomDateTimeRangeDialog::getStartDateTime()
+QDateTime CustomDateTimeRangeDialog::getStartDateTime() const
 {
     return ui->startDateTimeEdit->dateTime();
 }
 
-QDateTime CustomDateTimeRangeDialog::getEndDateTime()
+QDateTime CustomDateTimeRangeDialog::getEndDateTime() const
 {
     return ui->endDateTimeEdit->dateTime();
 }

@@ -31,8 +31,11 @@ QSqlDatabase& DatabaseManager::instance()
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     priority NUMBER,
                     timestamp TEXT,
-                    host TEXT,
-                    app TEXT,
+                    hostname TEXT,
+                    app_name TEXT,
+                    procid TEXT,
+                    msgid TEXT,
+                    structured_data TEXT,
                     message TEXT
                 )
             )");
@@ -48,37 +51,61 @@ QSqlDatabase& DatabaseManager::instance()
     return db;
 }
 
-void DatabaseManager::insertLog(const LogEntry& logEntry)
+QStringList DatabaseManager::insertLog(const LogEntry& logEntry)
 {
-    //qDebug() << "Database manager inserting log";
     QSqlQuery query;
     query.prepare(R"(
-        INSERT INTO logs (priority, timestamp, host, app, message)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO logs (priority, timestamp, hostname, app_name, procid, msgid, structured_data, message)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     )");
     query.addBindValue(logEntry.priority);
     query.addBindValue(logEntry.timestamp);
-    query.addBindValue(logEntry.host);
-    query.addBindValue(logEntry.app);
-    query.addBindValue(logEntry.message);
+    query.addBindValue(logEntry.hostname);
+    query.addBindValue(logEntry.appname);
+    query.addBindValue(logEntry.procid);
+    query.addBindValue(logEntry.msgid);
+    query.addBindValue(logEntry.structureddata);
+    query.addBindValue(logEntry.msg);
 
     if (!query.exec()) {
         qDebug() << "Insert failed: " << query.lastError().text();
+        return {};
     }
+
+    QVariant lastId = query.lastInsertId();
+    if (!lastId.isValid()) {
+        qDebug() << "Could not retrieve last insert ID.";
+        return {};
+    }
+
+    QSqlQuery last;
+    last.prepare("SELECT priority, timestamp, hostname, app_name, procid, msgid, structured_data, message FROM logs WHERE id = ?");
+    last.addBindValue(lastId);
+    if (!last.exec() || !last.next()) {
+        qDebug() << "Failed to fetch inserted row: " << last.lastError().text();
+        return {};
+    }
+
+    return getRow(last);
+    /*QStringList row;
+    for (int i = 0; i < last.record().count(); ++i) {
+        row.append()
+    }
+    return row;*/
 }
 
-QList<QList<QStandardItem*>> DatabaseManager::queryDB(const LogFilters& filters)
+QList<QStringList> DatabaseManager::queryDB(const LogFilters& filters)
 {
-    QString sql = "SELECT priority, timestamp, host, app, message FROM logs WHERE 1=1";
+    QString sql = "SELECT priority, timestamp, hostname, app_name, procid, msgid, structured_data, message FROM logs WHERE 1=1";
 
     if (filters.startDate.isValid())
         sql += " AND timestamp >= :start";
     if (filters.endDate.isValid())
         sql += " AND timestamp <= :end";
     if (!filters.hostFilter.isEmpty())
-        sql += " AND host LIKE :host";
+        sql += " AND hostname LIKE :hostname";
     if (!filters.appFilter.isEmpty())
-        sql += " AND app LIKE :app";
+        sql += " AND app_name LIKE :app_name";
     if (!filters.messageFilter.isEmpty())
         sql += " AND message LIKE :message";
     sql += " ORDER BY timestamp DESC";
@@ -91,26 +118,46 @@ QList<QList<QStandardItem*>> DatabaseManager::queryDB(const LogFilters& filters)
     if (filters.endDate.isValid())
         query.bindValue(":end", filters.endDate.toString(Qt::ISODate));
     if (!filters.hostFilter.isEmpty())
-        query.bindValue(":host", filters.hostFilter);
+        query.bindValue(":hostname", filters.hostFilter);
     if (!filters.appFilter.isEmpty())
-        query.bindValue(":app", filters.appFilter);
+        query.bindValue(":app_name", filters.appFilter);
     if (!filters.messageFilter.isEmpty())
         query.bindValue(":message", filters.messageFilter);
 
-    QList<QList<QStandardItem*>> rows;
+    QList<QStringList> rows;
     if (!query.exec()) {
         qWarning() << "Database query failed: " << query.lastError().text();
         return rows;
     }
 
     while (query.next()) {
-        QList<QStandardItem*> row;
-        row << new QStandardItem(query.value(0).toString()); // priority
-        row << new QStandardItem(query.value(1).toString()); // timestamp
-        row << new QStandardItem(query.value(2).toString()); // host
-        row << new QStandardItem(query.value(3).toString()); // app
-        row << new QStandardItem(query.value(4).toString()); // message
-        rows.append(row);
+        rows.append(getRow(query));
+        /*QStringList row;
+        const int priority = query.value(0).toInt();
+        row << QString::number(priority % 8); // severity
+        row << QString::number(priority / 8); // facility
+        row << query.value(1).toString(); // timestamp
+        row << query.value(2).toString(); // hostname
+        row << query.value(3).toString(); // app-name
+        row << query.value(4).toString(); // procid
+        row << query.value(5).toString(); // msgid
+        row << query.value(6).toString(); // message
+        rows.append(row);*/
     }
     return rows;
+}
+
+QStringList DatabaseManager::getRow(const QSqlQuery& query)
+{
+    QStringList row;
+    const int priority = query.value(0).toInt();
+    row << QString::number(priority % 8); // severity
+    row << QString::number(priority / 8); // facility
+    row << query.value(1).toString(); // timestamp
+    row << query.value(2).toString(); // hostname
+    row << query.value(3).toString(); // app-name
+    row << query.value(4).toString(); // procid
+    row << query.value(5).toString(); // msgid
+    row << query.value(6).toString(); // message
+    return row;
 }

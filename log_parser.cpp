@@ -43,7 +43,7 @@ LogParser::LogParser(QObject *parent) : QObject(parent)
     //qDebug() << "Num LogFormats: " << logFormats.size();
 }
 
-QDateTime LogParser::parseTimestamp(const QString& ts, const QString& format) {
+QDateTime LogParser::parseTimestamp(const QString& ts, const QString& format) const {
     if (format.toLower() == "iso8601") {
         return QDateTime::fromString(ts, Qt::ISODate);
     } else if (format.toLower() == "rfc2822") {
@@ -56,6 +56,21 @@ QDateTime LogParser::parseTimestamp(const QString& ts, const QString& format) {
 
 LogEntry LogParser::parse(const QString &line)
 {
+    static QString rfc5424 = "^<(?<priority>\\d{1,2}|1[0-8]\\d|19[01])>"
+                        "(?<version>[1-9]\\d?)\\s"
+                        "(?<timestamp>-|(?<fullyear>[12]\\d{3})-(?<month>0\\d|1[0-2])-(?<mday>[0-2]\\d|3[01])T"
+                            "(?<hour>[01]\\d|2[0-3]):(?<minute>[0-5]\\d):(?<second>[0-5]\\d|60)(?:\\.(?<secfrac>\\d{1,6}))?(?<numoffset>Z|[+-]\\d{2}:\\d{2}))\\s"
+                        "(?<hostname>\\S{1,255})\\s"
+                        "(?<app_name>\\S{1,48})\\s"
+                        "(?<procid>\\S{1,128})\\s"
+                        "(?<msgid>\\S{1,32})\\s"
+                        "(?<structured_data>-|\\[.*\\])"
+                        "(?:\\s(?<msg>.+))?$";
+    QRegularExpression foo(rfc5424);
+    if (!foo.isValid()) {
+        //qDebug() << "Regex Error: " << foo.errorString();
+    }
+
     LogEntry entry;
     entry.raw = line;
 
@@ -69,24 +84,24 @@ LogEntry LogParser::parse(const QString &line)
         if (match.hasMatch()) {
             //qDebug() << "Found matching pattern: " << standard;
 
-            entry.priority = match.captured("pri").toInt();
-            //Version
+            entry.priority = match.captured("priority").toInt();
+            entry.version = match.captured("version").toInt();
             entry.timestamp = parseTimestamp(match.captured("timestamp"), format.dateFormat).toString();
-            entry.host = match.captured("host");
-            entry.app = match.captured("app_name");
-            entry.pid = match.captured("procid");
-            // msgid
-            // data
-            entry.message = match.captured("msg");
+            entry.hostname = match.captured("hostname");
+            entry.appname = match.captured("app_name");
+            entry.procid = match.captured("procid");
+            entry.procid = match.captured("msgid");
+            entry.structureddata = match.captured("structured_data");
+            entry.msg = match.captured("msg");
             break;
         }
     }
 
-    if (entry.timestamp.isEmpty() && entry.message.isEmpty()) {
+    if (entry.timestamp.isEmpty() && entry.msg.isEmpty()) {
         qWarning() << "Could not parse log: " << line;
         auto tz = SettingsManager::instance()->currentTimeZone();
         entry.timestamp = QDateTime::currentDateTime(tz).toString(Qt::ISODate);
-        entry.message = line;
+        entry.msg = line;
     }
 
     return entry;

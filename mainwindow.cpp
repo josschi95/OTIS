@@ -2,7 +2,7 @@
 #include "mainwindow.h"
 #include "database_manager.h"
 #include "testwindow.h"
-#include "filter_header.h"
+//#include "filter_header.h"
 
 #include <QVBoxLayout>
 
@@ -12,12 +12,15 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    connect(ui->testWindowButton, &QPushButton::clicked, this, &MainWindow::onTestWindowButtonClicked);
-    connect(ui->refreshLogsButton, &QPushButton::clicked, this, &MainWindow::onRefreshLogTable);
+    connect(ui->overviewPageSelect, &QComboBox::currentIndexChanged, ui->stackedWidget, &QStackedWidget::setCurrentIndex);
+    //connect(ui->testWindowButton, &QPushButton::clicked, this, &MainWindow::onTestWindowButtonClicked);
 
-    auto view = ui->tableView;
-    auto *layout = new QVBoxLayout(this);
-    layout->addWidget(view);
+    // Log Table
+    //connect(ui->refreshLogsButton, &QPushButton::clicked, this, &MainWindow::onRefreshLogTable);
+
+    /*auto view = ui->tableView;
+    //auto *layout = new QVBoxLayout(this);
+    //layout->addWidget(view);
 
     header = new FilterHeader(view);
     view->setHorizontalHeader(header);
@@ -25,8 +28,9 @@ MainWindow::MainWindow(QWidget *parent)
     view->verticalHeader()->setVisible(false);
 
     model = new QStandardItemModel(view);
+    // severity, facility, timestamp, hostname, appname, procid, msgid, msg
     model->setHorizontalHeaderLabels({"Priority", "Timestamp", "Host", "App", "Message"});
-    view->setModel(model);
+    view->setModel(model);*/
 
     onTestWindowButtonClicked();
 
@@ -36,6 +40,11 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::changePage(int index)
+{
+
 }
 
 void MainWindow::onTestWindowButtonClicked()
@@ -50,26 +59,46 @@ void MainWindow::onTestWindowButtonClicked()
 
 void MainWindow::onRefreshLogTable()
 {
-    model->removeRows(0, model->rowCount());
+    ui->logTable->setRowCount(0);
 
-    auto filters = header->getFilters();
-    auto rows = DatabaseManager::queryDB(filters);
-    qDebug() << "DB query rows returned: " << rows.size();
-    for (int i = 0; i < rows.size(); ++i) {
-        model->appendRow(rows[i]);
+    const LogFilters filters;
+    //const auto filters = header->getFilters();
+    const auto rows = DatabaseManager::queryDB(filters);
+    //qDebug() << "DB query rows returned: " << rows.size();
+
+    for (const auto& row : rows) {
+        addRow(row);
+    }
+
+    //model->removeRows(0, model->rowCount()); // OLD
+    /*for (int i = 0; i < rows.size(); ++i) {
+        //model->appendRow(rows[i]);
+    }*/
+}
+
+void MainWindow::addRow(const QStringList& row)
+{
+    const int newRow = ui->logTable->rowCount();
+    ui->logTable->insertRow(newRow);
+    for (int c = 0; c < row.size(); ++c) {
+        ui->logTable->setItem(newRow, c, new QTableWidgetItem(row[c]));
     }
 }
 
 //TODO: Pull from db, don't use logEntry directly
-void MainWindow::updateLogTable(const LogEntry &logEntry)
+/*void MainWindow::updateLogTable(const LogEntry &logEntry)
 {
+
     //auto view = ui->tableView;
     QList<QStandardItem*> row;
-    row << new QStandardItem(QString::number(logEntry.priority))
+    row << new QStandardItem(QString::number(logEntry.priority % 8))
+        << new QStandardItem(QString::number(logEntry.priority / 8))
         << new QStandardItem(logEntry.timestamp)
-        << new QStandardItem(logEntry.host)
-        << new QStandardItem(logEntry.app)
-        << new QStandardItem(logEntry.message);
+        << new QStandardItem(logEntry.hostname)
+        << new QStandardItem(logEntry.appname)
+        << new QStandardItem(logEntry.procid)
+        << new QStandardItem(logEntry.msgid)
+        << new QStandardItem(logEntry.msg);
     model->appendRow(row);
 
     // Old
@@ -79,4 +108,4 @@ void MainWindow::updateLogTable(const LogEntry &logEntry)
     //ui->logTable->setItem(row, 1, new QTableWidgetItem(logEntry.host));
     //ui->logTable->setItem(row, 2, new QTableWidgetItem(logEntry.app));
     //ui->logTable->setItem(row, 3, new QTableWidgetItem(logEntry.message));
-}
+}*/

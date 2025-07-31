@@ -16,6 +16,6 @@ public:
 
 private:
     QMap<QString, LogFormat> logFormats;
-    QDateTime parseTimestamp(const QString& ts, const QString& format);
+    QDateTime parseTimestamp(const QString& ts, const QString& format) const;
 
 };

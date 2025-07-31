@@ -1,10 +1,12 @@
 #include <QApplication>
-#include <QTimeZone> // TESTING
 
 #include "mainwindow.h"
 #include "syslog_receiver.h"
 #include "log_parser.h"
 #include "database_manager.h"
+
+// https://www.rfc-editor.org/rfc/rfc5424
+
 
 // Operational Technology Insight & Security
 
@@ -18,9 +20,9 @@ int main(int argc, char *argv[])
     LogParser parser;
 
     QObject::connect(&receiver, &SyslogReceiver::logReceived, &window, [&](const QString &line) {
-        auto parsed = parser.parse(line);
-        DatabaseManager::insertLog(parsed);
-        window.updateLogTable(parsed);
+        const auto parsed = parser.parse(line);
+        const auto row = DatabaseManager::insertLog(parsed);
+        window.addRow(row);
     });
 
     window.show();

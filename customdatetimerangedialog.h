@@ -15,8 +15,8 @@ public:
     explicit CustomDateTimeRangeDialog(QWidget *parent = nullptr);
     ~CustomDateTimeRangeDialog();
     void reset();
-    QDateTime getStartDateTime();
-    QDateTime getEndDateTime();
+    QDateTime getStartDateTime() const;
+    QDateTime getEndDateTime() const;
 
 private slots:
     void onValuesChanged();

@@ -40,6 +40,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         settings_manager.cpp
         log_format.json
         test_logs.txt
+        tablefiltersdialog.h tablefiltersdialog.cpp tablefiltersdialog.ui
+
 
 
 
