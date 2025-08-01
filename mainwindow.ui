@@ -17,7 +17,7 @@
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
-      <widget class="QWidget" name="idx0_overview">
+      <widget class="QWidget" name="page0_overview">
        <widget class="QComboBox" name="overviewPageSelect">
         <property name="geometry">
          <rect>
@@ -49,7 +49,7 @@
         </item>
        </widget>
       </widget>
-      <widget class="QWidget" name="idx1_devices">
+      <widget class="QWidget" name="page1_devices">
        <widget class="QComboBox" name="devicesPageSelect">
         <property name="geometry">
          <rect>
@@ -81,7 +81,7 @@
         </item>
        </widget>
       </widget>
-      <widget class="QWidget" name="idx2_rules">
+      <widget class="QWidget" name="page2_rules">
        <widget class="QComboBox" name="rulesPageSelect">
         <property name="geometry">
          <rect>
@@ -113,7 +113,7 @@
         </item>
        </widget>
       </widget>
-      <widget class="QWidget" name="idx3_logs">
+      <widget class="LogsPage" name="page3_logs">
        <widget class="QFrame" name="frame_3">
         <property name="geometry">
          <rect>
@@ -258,6 +258,14 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>LogsPage</class>
+   <extends>QWidget</extends>
+   <header>logs_page.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

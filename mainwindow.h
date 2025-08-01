@@ -28,7 +28,7 @@ public:
 private slots:
     void onTestWindowButtonClicked();
     void onRefreshLogTable();
-    void changePage(int index);
+    //void changePage(int index);
 
 private:
     Ui::MainWindow *ui;

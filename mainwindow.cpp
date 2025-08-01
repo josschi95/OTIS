@@ -1,7 +1,9 @@
-#include "./ui_mainwindow.h"
+//#include "logs_page.h"
+#include "ui_mainwindow.h"
 #include "mainwindow.h"
 #include "database_manager.h"
 #include "testwindow.h"
+
 //#include "filter_header.h"
 
 #include <QVBoxLayout>
@@ -12,7 +14,10 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    ui->page3_logs->initialize();
+
     connect(ui->overviewPageSelect, &QComboBox::currentIndexChanged, ui->stackedWidget, &QStackedWidget::setCurrentIndex);
+
     //connect(ui->testWindowButton, &QPushButton::clicked, this, &MainWindow::onTestWindowButtonClicked);
 
     // Log Table
@@ -32,6 +37,8 @@ MainWindow::MainWindow(QWidget *parent)
     model->setHorizontalHeaderLabels({"Priority", "Timestamp", "Host", "App", "Message"});
     view->setModel(model);*/
 
+
+
     onTestWindowButtonClicked();
 
     onRefreshLogTable();
@@ -40,11 +47,6 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
-}
-
-void MainWindow::changePage(int index)
-{
-
 }
 
 void MainWindow::onTestWindowButtonClicked()

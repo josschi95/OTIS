@@ -29,12 +29,14 @@ LogFilters TableFiltersDialog::getFilters() const
     //TODO: Check if these are invalid values
     filters.startDate = ui->startDateTimeEdit->dateTime();
     filters.endDate = ui->endDateTimeEdit->dateTime();
+
     filters.hostFilter = ui->hostnameLineEdit->text();
     filters.appFilter = ui->appnameLineEdit->text();
     filters.procFilter = ui->procidLineEdit->text();
     filters.msgIDFilter = ui->msgidLineEdit->text();
     filters.messageFilter = ui->messageLineEdit->text();
 
+    qDebug() << "start Date is valid: " << filters.startDate.isValid();
     return filters;
 }
 
@@ -42,4 +44,10 @@ void TableFiltersDialog::resetFilters()
 {
     ui->startDateTimeEdit->setDateTime(QDateTime());
     ui->endDateTimeEdit->setDateTime(QDateTime());
+
+    ui->hostnameLineEdit->setText(QString());
+    ui->appnameLineEdit->setText(QString());
+    ui->procidLineEdit->setText(QString());
+    ui->msgidLineEdit->setText(QString());
+    ui->messageLineEdit->setText(QString());
 }

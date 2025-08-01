@@ -18,7 +18,7 @@ public:
     ~TableFiltersDialog();
     LogFilters getFilters() const;
 
-signals:
+public slots:
     void resetFilters();
 
 private:

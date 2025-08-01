@@ -17,6 +17,8 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
+        logs_page.h
+        logs_page.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -30,7 +32,6 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         database_manager.h
         database_manager.cpp
 
-
         testwindow.h testwindow.cpp testwindow.ui
         filter_header.h
         filter_header.cpp
@@ -41,11 +42,10 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         log_format.json
         test_logs.txt
         tablefiltersdialog.h tablefiltersdialog.cpp tablefiltersdialog.ui
-
-
-
-
+        logs_page.h
+        logs_page.cpp
     )
+
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET OTIS APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
 #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
@@ -69,6 +69,9 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/log_format.json ${CMAKE_CURRENT_BINAR
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test_logs.txt ${CMAKE_CURRENT_BINARY_DIR}/test_logs.txt COPYONLY)
 
 target_link_libraries(OTIS PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt6::Network Qt6::Sql)
+
+# Should fix issue with promoted widgets
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
