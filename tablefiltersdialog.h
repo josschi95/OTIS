@@ -17,6 +17,7 @@ public:
     explicit TableFiltersDialog(QWidget *parent = nullptr);
     ~TableFiltersDialog();
     LogFilters getFilters() const;
+    void applyFilters(LogFilters& filters) const;
 
 public slots:
     void resetFilters();

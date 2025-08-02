@@ -136,6 +136,51 @@
          </widget>
         </item>
         <item>
+         <widget class="QComboBox" name="severityComboBox">
+          <property name="maximumSize">
+           <size>
+            <width>50</width>
+            <height>26</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>14</pointsize>
+           </font>
+          </property>
+          <item>
+           <property name="text">
+            <string>==</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>!=</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>&lt;</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>&lt;=</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>&gt;</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>&gt;=</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item>
          <widget class="QLineEdit" name="severityLineEdit"/>
         </item>
        </layout>
@@ -158,6 +203,51 @@
           <property name="text">
            <string>Facility</string>
           </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="facilityComboBox">
+          <property name="maximumSize">
+           <size>
+            <width>50</width>
+            <height>26</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>14</pointsize>
+           </font>
+          </property>
+          <item>
+           <property name="text">
+            <string>==</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>!=</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>&lt;</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>&lt;=</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>&gt;</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>&gt;=</string>
+           </property>
+          </item>
          </widget>
         </item>
         <item>

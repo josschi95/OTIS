@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     QObject::connect(&receiver, &SyslogReceiver::logReceived, &window, [&](const QString &line) {
         const auto parsed = parser.parse(line);
         const auto row = DatabaseManager::insertLog(parsed);
-        window.addRow(row);
+        window.getLogsPage()->addRow(row);
     });
 
     window.show();
