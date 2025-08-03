@@ -6,6 +6,7 @@
 #include "database_manager.h"
 
 // https://www.rfc-editor.org/rfc/rfc5424
+// https://www.se.com/us/en/faqs/FA409423/
 
 
 // Operational Technology Insight & Security

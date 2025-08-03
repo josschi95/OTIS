@@ -16,17 +16,31 @@ enum class Severity {
     Debug,
 };
 
+enum class FilterOperator {
+    eq,  // ==
+    ne,  // !=
+    lt,  // <
+    lte, // <=
+    gt,  // >
+    gte,  // >=
+};
+
+enum class Facility {
+
+};
+
 struct LogFormat {
     QString pattern;
     QString dateFormat;
 };
 
-//TODO: Add Severity Level (Debug, Info, Notice, Warning, Error, Critical, Alert, Emergency)
 struct LogEntry {
     QString raw;
 
-    int priority; // (Facility * 8) + Severity
-    int version; // RFC 5424 only
+    //int priority; // (Facility * 8) + Severity
+    int severity;
+    int facility;
+    //int version; // RFC 5424 only
     QString timestamp;
     QString hostname;
     QString appname;
@@ -34,27 +48,22 @@ struct LogEntry {
     QString msgid; // RFC 5424 only
     QString structureddata; // RFC 5424 only
     QString msg;
-
-    int getFacility() const
-    {
-        return priority / 8;
-    }
-
-    int getSeverity() const
-    {
-        return priority % 8;
-    }
 };
 
 struct LogFilters {
-    int severity = static_cast<int>(Severity::Debug);
+    int severity = -1;
+    FilterOperator severityOp = FilterOperator::eq;
+    int facility = -1;
+    FilterOperator facilityOp = FilterOperator::eq;
 
     QDateTime startDate = QDateTime();
     QDateTime endDate = QDateTime();
+
     QString hostFilter = QString();
     QString appFilter = QString();
     QString procFilter = QString();
     QString msgIDFilter = QString();
+    // structured data ?
     QString messageFilter = QString();
 };
 
@@ -71,4 +80,6 @@ signals:
 private:
     DatabaseManager() = default;
     static QStringList getRow(const QSqlQuery& query);
+    static QString severityString(const int severity);
+    static QString facilityString(const int facility);
 };

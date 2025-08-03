@@ -43,6 +43,7 @@ LogParser::LogParser(QObject *parent) : QObject(parent)
     //qDebug() << "Num LogFormats: " << logFormats.size();
 }
 
+//TODO: I think this is old...?
 QDateTime LogParser::parseTimestamp(const QString& ts, const QString& format) const {
     if (format.toLower() == "iso8601") {
         return QDateTime::fromString(ts, Qt::ISODate);
@@ -56,6 +57,7 @@ QDateTime LogParser::parseTimestamp(const QString& ts, const QString& format) co
 
 LogEntry LogParser::parse(const QString &line)
 {
+    //TESTING
     static QString rfc5424 = "^<(?<priority>\\d{1,2}|1[0-8]\\d|19[01])>"
                         "(?<version>[1-9]\\d?)\\s"
                         "(?<timestamp>-|(?<fullyear>[12]\\d{3})-(?<month>0\\d|1[0-2])-(?<mday>[0-2]\\d|3[01])T"
@@ -70,6 +72,8 @@ LogEntry LogParser::parse(const QString &line)
     if (!foo.isValid()) {
         //qDebug() << "Regex Error: " << foo.errorString();
     }
+    //TESTING
+
 
     LogEntry entry;
     entry.raw = line;
@@ -84,13 +88,15 @@ LogEntry LogParser::parse(const QString &line)
         if (match.hasMatch()) {
             //qDebug() << "Found matching pattern: " << standard;
 
-            entry.priority = match.captured("priority").toInt();
-            entry.version = match.captured("version").toInt();
+            const int priority = match.captured("priority").toInt();
+            entry.severity = priority % 8;
+            entry.facility = priority / 8;
+            //entry.version = match.captured("version").toInt();
             entry.timestamp = parseTimestamp(match.captured("timestamp"), format.dateFormat).toString();
             entry.hostname = match.captured("hostname");
             entry.appname = match.captured("app_name");
             entry.procid = match.captured("procid");
-            entry.procid = match.captured("msgid");
+            entry.msgid = match.captured("msgid");
             entry.structureddata = match.captured("structured_data");
             entry.msg = match.captured("msg");
             break;

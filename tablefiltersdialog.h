@@ -16,7 +16,6 @@ class TableFiltersDialog : public QDialog
 public:
     explicit TableFiltersDialog(QWidget *parent = nullptr);
     ~TableFiltersDialog();
-    LogFilters getFilters() const;
     void applyFilters(LogFilters& filters) const;
 
 public slots:

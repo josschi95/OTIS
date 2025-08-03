@@ -61,7 +61,7 @@ void LogsPage::refreshLogTable()
     filtersDialog->applyFilters(currentFilters);
 
     const auto rows = DatabaseManager::queryDB(currentFilters);
-    //qDebug() << "DB query rows returned: " << rows.size();
+    qDebug() << "DB query rows returned: " << rows.size();
 
     for (const auto& row : rows) {
         addRow(row);
