@@ -11,6 +11,7 @@ class SyslogReceiver : public QObject
 
 public:
     explicit SyslogReceiver(QObject *parent = nullptr);
+    ~SyslogReceiver();
     void createSocket();
 
 signals:
@@ -21,4 +22,5 @@ private slots:
 
 private:
     QUdpSocket *udpSocket = nullptr;
+    void closeSocket();
 };

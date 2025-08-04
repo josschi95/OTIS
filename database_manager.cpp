@@ -89,11 +89,6 @@ QStringList DatabaseManager::insertLog(const LogEntry& logEntry)
     }
 
     return getRow(last);
-    /*QStringList row;
-    for (int i = 0; i < last.record().count(); ++i) {
-        row.append()
-    }
-    return row;*/
 }
 
 QList<QStringList> DatabaseManager::queryDB(const LogFilters& filters)

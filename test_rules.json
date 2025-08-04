@@ -1,0 +1,14 @@
+[
+    {
+        "//": "",
+        "name": "Multiple Failed Logins",
+        "enabled": true,
+
+        "msgid": "LOGIN_FAILURE",
+        "msgid-comparison": "Exact",
+
+        "thresholdCount": 3,
+        "timeWindow": "",
+        "triggerCondition": "gte"
+    }
+]

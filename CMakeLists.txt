@@ -44,6 +44,10 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         tablefiltersdialog.h tablefiltersdialog.cpp tablefiltersdialog.ui
         logs_page.h
         logs_page.cpp
+        rules.h
+        rule_manager.h
+        rule_manager.cpp
+        test_rules.json
     )
 
 # Define target properties for Android with Qt 6 as:
@@ -67,6 +71,7 @@ endif()
 # Copy the JSON config file next to the binary
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/log_format.json ${CMAKE_CURRENT_BINARY_DIR}/log_format.json COPYONLY)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test_logs.txt ${CMAKE_CURRENT_BINARY_DIR}/test_logs.txt COPYONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test_rules.json ${CMAKE_CURRENT_BINARY_DIR}/test_rules.json COPYONLY)
 
 target_link_libraries(OTIS PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt6::Network Qt6::Sql)
 

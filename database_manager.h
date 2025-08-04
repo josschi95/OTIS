@@ -25,8 +25,11 @@ enum class FilterOperator {
     gte,  // >=
 };
 
-enum class Facility {
-
+enum class StringComparison {
+    ExactMatch, // == comparison
+    Contains, // QString.contains()
+    StartsWith, // QString.startsWith
+    // Regex?
 };
 
 struct LogFormat {
