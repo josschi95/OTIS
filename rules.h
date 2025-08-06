@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QMap>
 #include <QString>
 
 #include "database_manager.h"
@@ -13,9 +14,10 @@ struct Rule {
     bool enabled = true; // if true, will generate alerts
 
     int severity = -1;
-    FilterOperator severityOp = FilterOperator::eq;
+    ComparisonOperator severityOp = ComparisonOperator::eq;
+
     int facility = -1;
-    FilterOperator facilityOp = FilterOperator::eq;
+    ComparisonOperator facilityOp = ComparisonOperator::eq;
 
     QString hostnameValue = QString();
     StringComparison hostnameOp = StringComparison::ExactMatch;
@@ -39,18 +41,19 @@ struct Rule {
      *  thresholdCount = 1, timeWindow = 5 minutes, triggerCondition = lt: triggers if less than 1 log evaluate to True every 5 minutes
     */
 
+    bool perHost = false; // if true, tracks separately per hostname (e.g. 3 failed logins from a single host, not *any* host)
     int thresholdCount = -1;
     QTime timeWindow = QTime();
-    FilterOperator triggerCondition = FilterOperator::gte;
+    ComparisonOperator triggerCondition = ComparisonOperator::gte;
 
-    bool compare(FilterOperator op, int ruleValue, int logValue) const {
+    bool compare(ComparisonOperator op, int ruleValue, int logValue) const {
         switch (op) {
-            case FilterOperator::eq: return ruleValue == logValue;
-            case FilterOperator::ne: return ruleValue != logValue;
-            case FilterOperator::lt: return ruleValue < logValue;
-            case FilterOperator::lte: return ruleValue <= logValue;
-            case FilterOperator::gt: return ruleValue > logValue;
-            case FilterOperator::gte: return ruleValue >= logValue;
+            case ComparisonOperator::eq: return ruleValue == logValue;
+            case ComparisonOperator::ne: return ruleValue != logValue;
+            case ComparisonOperator::lt: return ruleValue < logValue;
+            case ComparisonOperator::lte: return ruleValue <= logValue;
+            case ComparisonOperator::gt: return ruleValue > logValue;
+            case ComparisonOperator::gte: return ruleValue >= logValue;
             default: return false;
         }
     }
@@ -81,5 +84,16 @@ struct Rule {
         if (!messageValue.isEmpty() && !compare(messageOp, messageValue, log.msg)) return false;
 
         return true;
+    }
+};
+
+struct RuleGroup {
+    ~RuleGroup() = default;
+
+    std::shared_ptr<Rule> rule;
+    QMap<QString, QList<QDateTime>> entityTimestamps;
+
+    RuleGroup(std::shared_ptr<Rule> r) : rule(std::move(r)) {
+        if (!rule->perHost) entityTimestamps.insert("global", QList<QDateTime>());
     }
 };

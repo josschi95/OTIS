@@ -45,10 +45,10 @@ void TableFiltersDialog::applyFilters(LogFilters& filters) const
     int severity = ui->severityLineEdit->text().toInt(&severityOK);
     if (severityOK && severity >= 0 && severity <= 7) {
         filters.severity = severity;
-        filters.severityOp = static_cast<FilterOperator>(ui->severityComboBox->currentIndex());
+        filters.severityOp = static_cast<ComparisonOperator>(ui->severityComboBox->currentIndex());
     } else {
         filters.severity = -1;
-        filters.severityOp = FilterOperator::eq;
+        filters.severityOp = ComparisonOperator::eq;
 
         ui->severityLineEdit->setText(QString());
         ui->severityComboBox->setCurrentIndex(0);
@@ -58,10 +58,10 @@ void TableFiltersDialog::applyFilters(LogFilters& filters) const
     int facility = ui->facilityLineEdit->text().toInt(&facilityOK);
     if (facilityOK && facility >= 0 && facility <= 23) {
         filters.facility = facility;
-        filters.facilityOp = static_cast<FilterOperator>(ui->facilityComboBox->currentIndex());
+        filters.facilityOp = static_cast<ComparisonOperator>(ui->facilityComboBox->currentIndex());
     } else {
         filters.facility = -1;
-        filters.facilityOp = FilterOperator::eq;
+        filters.facilityOp = ComparisonOperator::eq;
 
         ui->facilityLineEdit->setText(QString());
         ui->facilityComboBox->setCurrentIndex(0);

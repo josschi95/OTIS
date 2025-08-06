@@ -11,29 +11,42 @@ RuleManager::RuleManager(QObject *parent) : QObject(parent)
     newRule->name = "Multiple Failed Logins";
     newRule->msgIDValue = "LOGIN_FAILURE";
     newRule->msgIDOp = StringComparison::ExactMatch;
+    newRule->perHost = true;
     newRule->thresholdCount = 3;
     newRule->timeWindow = QTime().fromString("00:01:00");
-    newRule->triggerCondition = FilterOperator::gte;
+    newRule->triggerCondition = ComparisonOperator::gte;
     addRule(newRule);
 
     // Start Update loop
     updateTimer = new QTimer(this);
-    updateTimer->setInterval(5 * 1000);
+    updateTimer->setInterval(5 * 1000); // 5 seconds
     connect(updateTimer, &QTimer::timeout, this, &RuleManager::update);
     updateTimer->start();
 }
 
-// Needed for tracking 'heartbeat' rules (e.g. those with a triggerCondition of < or <=)
+// Needed for tracking 'heartbeat' rules - those with a triggerCondition of < or <=
 void RuleManager::update()
 {
     //qDebug() << "Update";
+    QDateTime now = QDateTime::currentDateTime();
 
-    //TODO: Need to handle 'heartbeat' rules
+    for (auto& group : ruleGroups) {
+        if (!group.rule->enabled) continue; // user disabled
+        if (group.rule->thresholdCount < 0) continue; // not time-based
+        if (group.rule->triggerCondition != ComparisonOperator::lt && group.rule->triggerCondition != ComparisonOperator::lte) continue;
 
-    for (const auto& rule : rules) {
-        if (!rule->enabled) continue;
-        if (!ruleTimers.contains(rule)) continue;
+        int windowMs = QTime(0, 0).msecsTo(group.rule->timeWindow);
 
+        auto it = group.entityTimestamps.begin();
+        while (it != group.entityTimestamps.end()) {
+            QList<QDateTime>& timestamps = it.value();
+            clearOldTimestamps(timestamps, now, windowMs);
+
+            // Verify that there are the given number of logs remaining within the time window
+            int count = timestamps.size();
+            if (group.rule->triggerCondition == ComparisonOperator::lt && count < group.rule->thresholdCount) emit ruleViolated(group.rule);
+            if (group.rule->triggerCondition == ComparisonOperator::lte && count <= group.rule->thresholdCount) emit ruleViolated(group.rule);
+        }
     }
 
     updateTimer->start();
@@ -50,13 +63,13 @@ bool RuleManager::addRule(std::shared_ptr<Rule> rule)
 
     //TODO: Check that rule is valid
 
-    // To count as a 'timed rule' then thresholdCount must be > 0
-    // and timeWindow must be >= 60 seconds
-
     rules << rule;
 
+    // If rule is time-based add it to the RuleGroup
+    // To count as a 'timed rule' then thresholdCount must be > 0 and timeWindow must be >= 60 seconds
     if (rule->thresholdCount > 0 && (rule->timeWindow.minute() > 0 || rule->timeWindow.hour() > 0)) {
-        ruleTimers.insert(rule, QList<QDateTime>());
+        RuleGroup newGroup { rule };
+        ruleGroups.append(newGroup);
     }
 
     return true;
@@ -66,34 +79,47 @@ void RuleManager::checkRules(const LogEntry& log)
 {
     QDateTime now = QDateTime::currentDateTime();
 
-    //TODO: need to have option to track separately for different hosts
-    // at the moment, the test rule checks for ANY failed login, so 3 different people each failing once will trigger this alert
     for (const auto& rule : rules) {
         if (!rule->enabled) continue;
         if (!rule->evaluate(log)) continue;
+
         qDebug() << "log evaluated true";
-        if (!ruleTimers.contains(rule)) {
-            // Not time-based, Generate Alert
-            emit ruleViolated(rule);
-        } else {
+
+        bool timeBased = false;
+        for (auto& group : ruleGroups) {
+            if (group.rule != rule) continue;
             qDebug() << "Timed rule";
-            QList<QDateTime>& timestamps = ruleTimers[rule];
+            timeBased = true;
+
+            QString host = rule->perHost ? log.hostname : "global";
+            QList<QDateTime>& timestamps = group.entityTimestamps[host];
             timestamps.append(now);
 
-            // Remove old timestamps outside timeWindow
-            auto it = timestamps.begin();
-            while (it != timestamps.end()) {
-                if (it->msecsTo(now) > QTime(0, 0).msecsTo(rule->timeWindow)) {
-                    it = timestamps.erase(it);
-                } else {
-                    ++it;
-                }
-            }
+            int windowMs = QTime(0, 0).msecsTo(group.rule->timeWindow);
+            clearOldTimestamps(timestamps, now, windowMs);
 
+            // Check if the threshold has been exceeded within the time window
             int count = timestamps.size();
-            qDebug() << count;
-            if (rule->triggerCondition == FilterOperator::gt && count > rule->thresholdCount) emit ruleViolated(rule);
-            if (rule->triggerCondition == FilterOperator::gte && count >= rule->thresholdCount) emit ruleViolated(rule);
+            if (group.rule->triggerCondition == ComparisonOperator::gt && count > group.rule->thresholdCount) emit ruleViolated(group.rule);
+            if (group.rule->triggerCondition == ComparisonOperator::gte && count >= group.rule->thresholdCount) emit ruleViolated(group.rule);
+        }
+
+        // Not time-based, Generate Alert
+        if (!timeBased) {
+            qDebug() << "Not time based";
+            emit ruleViolated(rule);
+        }
+    }
+}
+
+void RuleManager::clearOldTimestamps(QList<QDateTime>& timestamps, const QDateTime& now, int windowMs)
+{
+    auto it = timestamps.begin();
+    while (it != timestamps.end()) {
+        if (it->msecsTo(now) > windowMs) {
+            it = timestamps.erase(it);
+        } else {
+            ++it;
         }
     }
 }

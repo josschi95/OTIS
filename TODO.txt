@@ -3,3 +3,8 @@ Features to add:
 Settings:
     Timezone
     Displayed DateTime format
+
+
+Next: new_rule_dialog
+
+AlertManager class

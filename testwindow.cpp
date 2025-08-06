@@ -11,7 +11,7 @@ TestWindow::TestWindow(QWidget *parent)
     , ui(new Ui::TestWindow)
 {
     ui->setupUi(this);
-    connect(ui->fakeLogButton, &QPushButton::clicked, this, &TestWindow::onFakeLogButtonClicked);
+    //connect(ui->fakeLogButton, &QPushButton::clicked, this, &TestWindow::onFakeLogButtonClicked);
 
     foo();
 }
@@ -193,4 +193,12 @@ void TestWindow::on_vibrationSensorEnabledCheckbox_checkStateChanged(const Qt::C
 
 
 
+
+
+void TestWindow::on_user_failedLoginButton_2_clicked()
+{
+    auto timestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
+    QString log = QString("<138>1 %1 workstation-02 winlogon 4625 LOGIN_FAILURE - Failed login attempt for user 'admin' from 10.1.2.33").arg(timestamp);
+    sendTestLog(log.toUtf8());
+}
 

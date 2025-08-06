@@ -27,6 +27,8 @@ private slots:
 
 private:
     QList<std::shared_ptr<Rule>> rules;
-    QMap<std::shared_ptr<Rule>, QList<QDateTime>> ruleTimers; //TODO: rename
+    QList<RuleGroup> ruleGroups;
+    //QMap<std::shared_ptr<Rule>, QList<QDateTime>> ruleTimers; //TODO: rename
     QTimer *updateTimer;
+    void clearOldTimestamps(QList<QDateTime>& list, const QDateTime& now, int windowMs);
 };

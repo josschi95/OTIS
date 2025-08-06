@@ -93,13 +93,13 @@ QStringList DatabaseManager::insertLog(const LogEntry& logEntry)
 
 QList<QStringList> DatabaseManager::queryDB(const LogFilters& filters)
 {
-    static const QMap<FilterOperator, QString> opToString = {
-        { FilterOperator::eq, "==" },
-        { FilterOperator::ne, "!=" },
-        { FilterOperator::lt, "<" },
-        { FilterOperator::lte, "<=" },
-        { FilterOperator::gt, ">" },
-        { FilterOperator::gte, ">=" },
+    static const QMap<ComparisonOperator, QString> opToString = {
+        { ComparisonOperator::eq, "==" },
+        { ComparisonOperator::ne, "!=" },
+        { ComparisonOperator::lt, "<" },
+        { ComparisonOperator::lte, "<=" },
+        { ComparisonOperator::gt, ">" },
+        { ComparisonOperator::gte, ">=" },
     };
 
     qDebug() << "Querying DB";

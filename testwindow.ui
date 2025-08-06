@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>580</width>
-    <height>260</height>
+    <height>265</height>
    </rect>
   </property>
   <property name="font">
@@ -19,19 +19,6 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="fakeLogButton">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>220</y>
-      <width>86</width>
-      <height>26</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Log Event</string>
-    </property>
-   </widget>
    <widget class="QLabel" name="headerLabel">
     <property name="geometry">
      <rect>
@@ -56,12 +43,12 @@
       <x>10</x>
       <y>40</y>
       <width>556</width>
-      <height>175</height>
+      <height>213</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
+      <layout class="QHBoxLayout" name="workstation01">
        <item>
         <widget class="QLabel" name="label">
          <property name="font">
@@ -98,7 +85,50 @@
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <layout class="QHBoxLayout" name="workstation02">
+       <item>
+        <widget class="QLabel" name="label_5">
+         <property name="font">
+          <font>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Workstation-02</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="user_successfulLoginButton_2">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>Successful Login</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="user_failedLoginButton_2">
+         <property name="text">
+          <string>Failed Login</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="user_firewallDisabledButton_2">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>Firewall Disabled</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="hmi">
        <item>
         <widget class="QLabel" name="label_2">
          <property name="font">
@@ -142,7 +172,7 @@
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <layout class="QHBoxLayout" name="scada">
        <item>
         <widget class="QLabel" name="label_3">
          <property name="font">
@@ -186,7 +216,7 @@
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <layout class="QHBoxLayout" name="tempSensor">
        <item>
         <widget class="QLabel" name="label_4">
          <property name="text">
@@ -226,7 +256,7 @@
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_5">
+      <layout class="QHBoxLayout" name="vibSensor">
        <item>
         <widget class="QLabel" name="label_6">
          <property name="font">

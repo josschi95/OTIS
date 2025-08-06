@@ -16,7 +16,7 @@ enum class Severity {
     Debug,
 };
 
-enum class FilterOperator {
+enum class ComparisonOperator {
     eq,  // ==
     ne,  // !=
     lt,  // <
@@ -55,9 +55,9 @@ struct LogEntry {
 
 struct LogFilters {
     int severity = -1;
-    FilterOperator severityOp = FilterOperator::eq;
+    ComparisonOperator severityOp = ComparisonOperator::eq;
     int facility = -1;
-    FilterOperator facilityOp = FilterOperator::eq;
+    ComparisonOperator facilityOp = ComparisonOperator::eq;
 
     QDateTime startDate = QDateTime();
     QDateTime endDate = QDateTime();

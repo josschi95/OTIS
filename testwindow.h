@@ -48,6 +48,8 @@ private slots:
 
     void on_vibrationSensorEnabledCheckbox_checkStateChanged(const Qt::CheckState &arg1);
 
+    void on_user_failedLoginButton_2_clicked();
+
 private:
     Ui::TestWindow *ui;
     void sendTestLog(QByteArray log);
