@@ -17,6 +17,13 @@ RuleManager::RuleManager(QObject *parent) : QObject(parent)
     newRule->triggerCondition = ComparisonOperator::gte;
     addRule(newRule);
 
+    auto noLogRule = std::make_shared<Rule>();
+    noLogRule->name = "No Incoming Logs";
+    noLogRule->thresholdCount = 1;
+    noLogRule->timeWindow = QTime().fromString("00:01:00");
+    noLogRule->triggerCondition = ComparisonOperator::lt;
+    addRule(noLogRule);
+
     // Start Update loop
     updateTimer = new QTimer(this);
     updateTimer->setInterval(5 * 1000); // 5 seconds
@@ -34,6 +41,7 @@ void RuleManager::update()
         if (!group.rule->enabled) continue; // user disabled
         if (group.rule->thresholdCount < 0) continue; // not time-based
         if (group.rule->triggerCondition != ComparisonOperator::lt && group.rule->triggerCondition != ComparisonOperator::lte) continue;
+        //qDebug() << group.rule->name;
 
         int windowMs = QTime(0, 0).msecsTo(group.rule->timeWindow);
 
@@ -42,10 +50,11 @@ void RuleManager::update()
             QList<QDateTime>& timestamps = it.value();
             clearOldTimestamps(timestamps, now, windowMs);
 
-            // Verify that there are the given number of logs remaining within the time window
-            int count = timestamps.size();
+            int count = timestamps.size(); // Verify that there are the given number of logs remaining within the time window
             if (group.rule->triggerCondition == ComparisonOperator::lt && count < group.rule->thresholdCount) emit ruleViolated(group.rule);
             if (group.rule->triggerCondition == ComparisonOperator::lte && count <= group.rule->thresholdCount) emit ruleViolated(group.rule);
+
+            ++it;
         }
     }
 
@@ -83,12 +92,12 @@ void RuleManager::checkRules(const LogEntry& log)
         if (!rule->enabled) continue;
         if (!rule->evaluate(log)) continue;
 
-        qDebug() << "log evaluated true";
+        //qDebug() << "log evaluated true";
 
         bool timeBased = false;
         for (auto& group : ruleGroups) {
             if (group.rule != rule) continue;
-            qDebug() << "Timed rule";
+            //qDebug() << "Timed rule";
             timeBased = true;
 
             QString host = rule->perHost ? log.hostname : "global";
@@ -106,7 +115,7 @@ void RuleManager::checkRules(const LogEntry& log)
 
         // Not time-based, Generate Alert
         if (!timeBased) {
-            qDebug() << "Not time based";
+            //qDebug() << "Not time based";
             emit ruleViolated(rule);
         }
     }

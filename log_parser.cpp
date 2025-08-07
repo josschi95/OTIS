@@ -6,7 +6,6 @@
 #include <QJsonValue>
 
 #include "log_parser.h"
-#include "database_manager.h"
 #include "settings_manager.h"
 
 

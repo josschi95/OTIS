@@ -5,7 +5,6 @@
 #include <QMap>
 
 #include "rules.h"
-//#include "database_manager.h"
 
 
 class RuleManager : public QObject
@@ -28,7 +27,6 @@ private slots:
 private:
     QList<std::shared_ptr<Rule>> rules;
     QList<RuleGroup> ruleGroups;
-    //QMap<std::shared_ptr<Rule>, QList<QDateTime>> ruleTimers; //TODO: rename
     QTimer *updateTimer;
     void clearOldTimestamps(QList<QDateTime>& list, const QDateTime& now, int windowMs);
 };

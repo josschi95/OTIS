@@ -5,8 +5,8 @@
 #include <QComboBox>
 
 #include "filter_header.h"
-#include "database_manager.h"
 #include "settings_manager.h"
+#include "logs.h"
 
 // https://stackoverflow.com/questions/44343738/how-to-inject-widgets-between-qheaderview-and-qtableview
 

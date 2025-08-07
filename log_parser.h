@@ -3,7 +3,7 @@
 #include <QMap>
 #include <QString>
 
-#include "database_manager.h"
+#include "logs.h"
 
 
 class LogParser : public QObject

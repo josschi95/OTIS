@@ -18,9 +18,11 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     // Other Pages here
+    ui->page2_rules->initialize();
+    rulesPage = ui->page2_rules;
 
     ui->page3_logs->initialize();
-    logsPage = ui->page3_logs;
+    logsPage = ui->page3_logs; // Do I need to store this?
 
     onTestWindowButtonClicked();
 }

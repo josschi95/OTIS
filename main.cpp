@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     });
 
     QObject::connect(&ruleManager, &RuleManager::ruleViolated, &window, [&](std::shared_ptr<Rule> violatedRule) {
-        qDebug() << "Rule Violated: " << violatedRule->name;
+        qDebug() << "Rule Violated: " << violatedRule->name << " " << QTime().currentTime();
     });
 
     window.show();

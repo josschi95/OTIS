@@ -4,16 +4,34 @@
 
 #include "testwindow.h"
 #include "ui_testwindow.h"
-#include "settings_manager.h"
+#include "database_manager.h"
+
 
 TestWindow::TestWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::TestWindow)
 {
     ui->setupUi(this);
-    //connect(ui->fakeLogButton, &QPushButton::clicked, this, &TestWindow::onFakeLogButtonClicked);
 
-    foo();
+    if (DatabaseManager::logCount() > 0) return;
+    // Submit some filler logs if the db is empty
+    qDebug() << "Adding filler logs";
+    QFile file("test_logs.txt");
+    if (!file.open(QIODevice::ReadOnly)) {
+        qWarning() << "Unable to open test_log file: " << file.errorString();
+        return;
+    }
+
+    QTextStream in(&file);
+
+    while (!in.atEnd()) {
+        QString line = in.readLine().trimmed();
+        if (!line.isEmpty()) {
+            sendTestLog(line.toUtf8());
+        }
+    }
+
+    file.close();
 }
 
 TestWindow::~TestWindow()
@@ -33,40 +51,6 @@ void TestWindow::sendTestLog(QByteArray log)
     } else {
         //qDebug() << "Sent UDP datagram, bytes:" << bytesSent;
     }
-}
-
-// Generate a fake log to ingest
-void TestWindow::onFakeLogButtonClicked()
-{
-    foo();
-    return;
-    QTimeZone tz = SettingsManager::instance()->currentTimeZone();
-    QString line = QString("%1 host snort: Alert: Something happened").arg(
-        QDateTime::currentDateTime(tz).toString(Qt::ISODate)
-        //TODO: Variety
-        );
-    QByteArray msg = line.toUtf8();
-    sendTestLog(msg);
-}
-
-void TestWindow::foo()
-{
-    QFile file("test_logs.txt");
-    if (!file.open(QIODevice::ReadOnly)) {
-        qWarning() << "Unable to open test_log file: " << file.errorString();
-        return;
-    }
-
-    QTextStream in(&file);
-
-    while (!in.atEnd()) {
-        QString line = in.readLine().trimmed();
-        if (!line.isEmpty()) {
-            sendTestLog(line.toUtf8());
-        }
-    }
-
-    file.close();
 }
 
 void TestWindow::on_user_successfulLoginButton_clicked()
@@ -89,6 +73,15 @@ void TestWindow::on_user_firewallDisabledButton_clicked()
 {
     auto timestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
     QString log = QString("<137>1 %1 workstation-01 endpoint-guard 3010 FIREWALL_DISABLED - Windows Defender Firewall disabled by user 'tech1'").arg(timestamp);
+    sendTestLog(log.toUtf8());
+}
+
+
+// this one is just used for testing that the per-host setting for rules is working
+void TestWindow::on_user_failedLoginButton_2_clicked()
+{
+    auto timestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
+    QString log = QString("<138>1 %1 workstation-02 winlogon 4625 LOGIN_FAILURE - Failed login attempt for user 'admin' from 10.1.2.33").arg(timestamp);
     sendTestLog(log.toUtf8());
 }
 
@@ -186,19 +179,5 @@ void TestWindow::on_vibrationSensorOnlineCheckbox_checkStateChanged(const Qt::Ch
 void TestWindow::on_vibrationSensorEnabledCheckbox_checkStateChanged(const Qt::CheckState &arg1)
 {
     //TODO
-}
-
-
-
-
-
-
-
-
-void TestWindow::on_user_failedLoginButton_2_clicked()
-{
-    auto timestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
-    QString log = QString("<138>1 %1 workstation-02 winlogon 4625 LOGIN_FAILURE - Failed login attempt for user 'admin' from 10.1.2.33").arg(timestamp);
-    sendTestLog(log.toUtf8());
 }
 

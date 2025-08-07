@@ -4,9 +4,8 @@
 #include <QSqlError>
 #include <QDebug>
 
-#include <QFileInfo> // TESTING
-
 #include "database_manager.h"
+#include "rules.h"
 
 
 // Need to do this since Qt doesn't like a static non-POD db
@@ -18,22 +17,20 @@ QSqlDatabase& DatabaseManager::instance()
 
     if (!initialized) {
         db = QSqlDatabase::addDatabase("QSQLITE");
-        db.setDatabaseName("logs.db");
+        db.setDatabaseName("otis.db");
 
         if (!db.open()) {
             qCritical() << "Failed to open DB:" << db.lastError().text();
         } else {
-            //qDebug() << "Database opened successfully.";
-
-            QSqlQuery query;
-            query.exec(R"(
+            QSqlQuery logsQuery;
+            logsQuery.exec(R"(
                 CREATE TABLE IF NOT EXISTS logs (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     severity NUMBER,
                     facility NUMBER,
                     timestamp TEXT,
                     hostname TEXT,
-                    app_name TEXT,
+                    appname TEXT,
                     procid TEXT,
                     msgid TEXT,
                     structured_data TEXT,
@@ -41,9 +38,39 @@ QSqlDatabase& DatabaseManager::instance()
                 )
             )");
 
-            if (!query.exec()) {
-                qCritical() << "Failed to create table:" << query.lastError().text();
+            if (!logsQuery.exec()) {
+                qCritical() << "Failed to create logs table:" << logsQuery.lastError().text();
                 std::abort(); // Crash... gracefully
+            }
+
+            QSqlQuery rulesQuery;
+            if (!rulesQuery.exec(R"(
+                CREATE TABLE IF NOT EXISTS rules (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT,
+                    severity NUMBER,
+                    severityOp NUMBER,
+                    facility NUMBER,
+                    facilityOp NUMBER,
+                    hostname TEXT,
+                    hostnameOp NUMBER,
+                    appname TEXT,
+                    appnameOp NUMBER,
+                    procid TEXT,
+                    procidOp NUMBER,
+                    msgid TEXT,
+                    msgidOp NUMBER,
+                    message TEXT,
+                    messageOp NUMBER,
+
+                    threshold NUMBER,
+                    timeWindow TEXT,
+                    threshOp NUMBER,
+                    perHost BOOLEAN
+                )
+            )")) {
+                qCritical() << "Failed to create rules table:" << rulesQuery.lastError().text();
+                std::abort(); // Crash... again
             }
         }
         initialized = true;
@@ -52,11 +79,23 @@ QSqlDatabase& DatabaseManager::instance()
     return db;
 }
 
+int DatabaseManager::logCount()
+{
+    QSqlQuery countQuery;
+    if (countQuery.exec("SELECT COUNT(*) FROM logs")) {
+        if (countQuery.next()) {
+            return countQuery.value(0).toInt();
+        }
+    }
+    return 0;
+}
+
+
 QStringList DatabaseManager::insertLog(const LogEntry& logEntry)
 {
     QSqlQuery query;
     query.prepare(R"(
-        INSERT INTO logs (severity, facility, timestamp, hostname, app_name, procid, msgid, structured_data, message)
+        INSERT INTO logs (severity, facility, timestamp, hostname, appname, procid, msgid, structured_data, message)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     )");
     query.addBindValue(logEntry.severity);
@@ -81,17 +120,18 @@ QStringList DatabaseManager::insertLog(const LogEntry& logEntry)
     }
 
     QSqlQuery last;
-    last.prepare("SELECT severity, facility, timestamp, hostname, app_name, procid, msgid, structured_data, message FROM logs WHERE id = ?");
+    last.prepare("SELECT severity, facility, timestamp, hostname, appname, procid, msgid, structured_data, message FROM logs WHERE id = ?");
     last.addBindValue(lastId);
     if (!last.exec() || !last.next()) {
         qDebug() << "Failed to fetch inserted row: " << last.lastError().text();
         return {};
     }
 
-    return getRow(last);
+    return getLogRow(last);
 }
 
-QList<QStringList> DatabaseManager::queryDB(const LogFilters& filters)
+
+QList<QStringList> DatabaseManager::queryLogs(const LogFilters& filters)
 {
     static const QMap<ComparisonOperator, QString> opToString = {
         { ComparisonOperator::eq, "==" },
@@ -102,8 +142,8 @@ QList<QStringList> DatabaseManager::queryDB(const LogFilters& filters)
         { ComparisonOperator::gte, ">=" },
     };
 
-    qDebug() << "Querying DB";
-    QString sql = "SELECT severity, facility, timestamp, hostname, app_name, procid, msgid, structured_data, message FROM logs WHERE 1=1";
+    //qDebug() << "Querying DB";
+    QString sql = "SELECT severity, facility, timestamp, hostname, appname, procid, msgid, structured_data, message FROM logs WHERE 1=1";
 
     if (filters.severity >= 0 && filters.severity <= 7)
         sql += QString(" AND severity %1 :severity").arg(opToString.value(filters.severityOp));
@@ -116,7 +156,7 @@ QList<QStringList> DatabaseManager::queryDB(const LogFilters& filters)
     if (!filters.hostFilter.isEmpty())
         sql += " AND hostname LIKE :hostname";
     if (!filters.appFilter.isEmpty())
-        sql += " AND app_name LIKE :app_name";
+        sql += " AND appname LIKE :appname";
     if (!filters.messageFilter.isEmpty())
         sql += " AND message LIKE :message";
     sql += " ORDER BY timestamp DESC";
@@ -135,24 +175,23 @@ QList<QStringList> DatabaseManager::queryDB(const LogFilters& filters)
     if (!filters.hostFilter.isEmpty())
         query.bindValue(":hostname", filters.hostFilter);
     if (!filters.appFilter.isEmpty())
-        query.bindValue(":app_name", filters.appFilter);
+        query.bindValue(":appname", filters.appFilter);
     if (!filters.messageFilter.isEmpty())
         query.bindValue(":message", filters.messageFilter);
 
-    QList<QStringList> rows;
     if (!query.exec()) {
-        qWarning() << "Database query failed: " << query.lastError().text();
-        return rows;
+        qWarning() << "Database logs query failed: " << query.lastError().text();
+        return {};
     }
 
-    while (query.next()) {
-        rows.append(getRow(query));
-    }
-    qDebug() << rows.count();
+    QList<QStringList> rows;
+    while (query.next()) rows << getLogRow(query);
+    //qDebug() << rows.count();
     return rows;
 }
 
-QStringList DatabaseManager::getRow(const QSqlQuery& query)
+
+QStringList DatabaseManager::getLogRow(const QSqlQuery& query)
 {
     QStringList row;
     row << severityString(query.value(0).toInt()); // severity
@@ -166,6 +205,7 @@ QStringList DatabaseManager::getRow(const QSqlQuery& query)
     row << query.value(8).toString(); // message
     return row;
 }
+
 
 QString DatabaseManager::severityString(const int severity)
 {
@@ -183,6 +223,7 @@ QString DatabaseManager::severityString(const int severity)
     else if (severity >= strings.count()) return strings[strings.count() - 1];
     return strings[severity];
 }
+
 
 QString DatabaseManager::facilityString(const int facility)
 {
@@ -215,4 +256,88 @@ QString DatabaseManager::facilityString(const int facility)
     if (facility < 0) return strings[0];
     else if (facility >= strings.count()) return strings[strings.count() - 1];
     return strings[facility];
+}
+
+
+void DatabaseManager::addRule(const Rule& rule)
+{
+    static const QMap<ComparisonOperator, QString> compMap = {
+        { ComparisonOperator::eq, "==" },
+        { ComparisonOperator::ne, "!=" },
+        { ComparisonOperator::lt, "<" },
+        { ComparisonOperator::lte, "<=" },
+        { ComparisonOperator::gt, ">" },
+        { ComparisonOperator::gte, ">=" }
+    };
+
+    static const QMap<StringComparison, QString> stringMap = {
+        { StringComparison::ExactMatch, "Exact" },
+        { StringComparison::Contains, "Contains" },
+        { StringComparison::StartsWith, "Starts With" }
+    };
+
+    QSqlQuery query;
+    query.prepare(R"(
+        INSERT INTO rules (name, severity, severityOp, facility, facilityOp, hostname, hostnameOp, appname, appnameOp, procid, procidOp, msgid, msgidOp, message, messageOp, threshold, timeWindow, threshOp, perHost)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    )");
+    query.addBindValue(rule.name);
+    query.addBindValue(rule.severity);
+    query.addBindValue(compMap[rule.severityOp]);
+    query.addBindValue(rule.facility);
+    query.addBindValue(compMap[rule.facilityOp]);
+    query.addBindValue(rule.hostnameValue);
+    query.addBindValue(stringMap[rule.hostnameOp]);
+    query.addBindValue(rule.appnameValue);
+    query.addBindValue(stringMap[rule.appnameOp]);
+    query.addBindValue(rule.procIDValue);
+    query.addBindValue(stringMap[rule.procIDOp]);
+    query.addBindValue(rule.msgIDValue);
+    query.addBindValue(stringMap[rule.msgIDOp]);
+    query.addBindValue(rule.messageValue);
+    query.addBindValue(stringMap[rule.messageOp]);
+    query.addBindValue(rule.thresholdCount);
+    query.addBindValue(rule.timeWindow);
+    query.addBindValue(compMap[rule.triggerCondition]);
+    query.addBindValue(rule.perHost);
+
+    if (!query.exec()) {
+        qDebug() << "Insert failed: " << query.lastError().text();
+    }
+}
+
+
+QList<QStringList> DatabaseManager::queryRules()
+{
+    QString sql = "SELECT name, severity, severityOp, facility, facilityOp, hostname, hostnameOp, appname, appnameOp, procid, procidOp, msgid, msgidOp, message, messageOp, threshold, timeWindow, threshOp, perHost FROM rules";
+    QSqlQuery query(instance());
+
+    if (!query.exec(sql)) {
+        qWarning() << "Database rules query failed: " << query.lastError().text();
+        return {};
+    }
+
+    QList<QStringList> rows;
+    while (query.next()) rows << getRuleRow(query);
+    qDebug() << rows.count();
+    return rows;
+}
+
+
+QStringList DatabaseManager::getRuleRow(const QSqlQuery& query)
+{
+    QStringList row;
+    row << query.value(0).toString(); // name
+    row << QString(query.value(2).toString() + query.value(1).toString()); // severity
+    row << QString(query.value(4).toString() + query.value(3).toString()); // facility
+    row << QString(query.value(6).toString() + ": " + query.value(5).toString()); // hostname
+    row << QString(query.value(8).toString() + ": " + query.value(7).toString()); // appname
+    row << QString(query.value(10).toString() + ": " + query.value(9).toString()); // procid
+    row << QString(query.value(12).toString() + ": " + query.value(11).toString()); // msgid
+    row << QString(query.value(14).toString() + ": " + query.value(13).toString()); // message
+    //TODO: Change appearance for this if it's not being used
+    row << QString(query.value(17).toString() + query.value(15).toString() + " in " + query.value(16).toString()); // limit
+    row << query.value(18).toString(); // per-host
+
+    return row;
 }

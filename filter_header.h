@@ -3,8 +3,8 @@
 #include <QHeaderView>
 #include <QVector>
 
-#include "database_manager.h"
 #include "customdatetimerangedialog.h"
+#include "logs.h"
 
 
 class FilterHeader : public QHeaderView

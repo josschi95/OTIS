@@ -18,6 +18,8 @@ TableFiltersDialog::TableFiltersDialog(QWidget *parent)
 
     QIntValidator *sevValidator = new QIntValidator(0, 7, this);
     ui->severityLineEdit->setValidator(sevValidator);
+
+    // Is there a reason I'm not doing this for facility?
 }
 
 TableFiltersDialog::~TableFiltersDialog()

@@ -1,88 +1,27 @@
 #pragma once
 
-#include <QStandardItemModel>
 #include <QSqlDatabase>
-#include <QDateTime>
-#include <QMap>
 
-enum class Severity {
-    Emergency,
-    Alert,
-    Critical,
-    Error,
-    Warning,
-    Notice,
-    Informational,
-    Debug,
-};
+#include "rules.h"
 
-enum class ComparisonOperator {
-    eq,  // ==
-    ne,  // !=
-    lt,  // <
-    lte, // <=
-    gt,  // >
-    gte,  // >=
-};
-
-enum class StringComparison {
-    ExactMatch, // == comparison
-    Contains, // QString.contains()
-    StartsWith, // QString.startsWith
-    // Regex?
-};
-
-struct LogFormat {
-    QString pattern;
-    QString dateFormat;
-};
-
-struct LogEntry {
-    QString raw;
-
-    //int priority; // (Facility * 8) + Severity
-    int severity;
-    int facility;
-    //int version; // RFC 5424 only
-    QString timestamp;
-    QString hostname;
-    QString appname;
-    QString procid;
-    QString msgid; // RFC 5424 only
-    QString structureddata; // RFC 5424 only
-    QString msg;
-};
-
-struct LogFilters {
-    int severity = -1;
-    ComparisonOperator severityOp = ComparisonOperator::eq;
-    int facility = -1;
-    ComparisonOperator facilityOp = ComparisonOperator::eq;
-
-    QDateTime startDate = QDateTime();
-    QDateTime endDate = QDateTime();
-
-    QString hostFilter = QString();
-    QString appFilter = QString();
-    QString procFilter = QString();
-    QString msgIDFilter = QString();
-    // structured data ?
-    QString messageFilter = QString();
-};
 
 class DatabaseManager
 {
 public:
     static QSqlDatabase& instance();
     static QStringList insertLog(const LogEntry& logEntry);
-    static QList<QStringList> queryDB(const LogFilters& filters);
+    static QList<QStringList> queryLogs(const LogFilters& filters);
+    static int logCount();
+    static void addRule(const Rule& rule);
+    static QList<QStringList> queryRules();
 
 signals:
     void databaseUpdated();
 
 private:
     DatabaseManager() = default;
-    static QStringList getRow(const QSqlQuery& query);
+    static QStringList getLogRow(const QSqlQuery& query);
+    static QStringList getRuleRow(const QSqlQuery& query);
     static QString severityString(const int severity);
     static QString facilityString(const int facility);
 };

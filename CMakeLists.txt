@@ -19,6 +19,8 @@ set(PROJECT_SOURCES
         mainwindow.ui
         logs_page.h
         logs_page.cpp
+        rules_page.h
+        rules_page.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -48,6 +50,11 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         rule_manager.h
         rule_manager.cpp
         test_rules.json
+        new_rule_dialog.h new_rule_dialog.cpp new_rule_dialog.ui
+        rules_page.h
+        rules_page.cpp
+        enums.h
+        logs.h
     )
 
 # Define target properties for Android with Qt 6 as:

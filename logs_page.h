@@ -4,7 +4,8 @@
 #include <QTableWidget>
 
 #include "tablefiltersdialog.h"
-#include "database_manager.h"
+#include "logs.h"
+
 
 namespace Ui {
 class LogsPage;

@@ -16,8 +16,6 @@ public:
     ~TestWindow();
 
 private slots:
-    void onFakeLogButtonClicked();
-
     void on_user_successfulLoginButton_clicked();
 
     void on_user_failedLoginButton_clicked();
@@ -53,5 +51,4 @@ private slots:
 private:
     Ui::TestWindow *ui;
     void sendTestLog(QByteArray log);
-    void foo();
 };

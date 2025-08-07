@@ -2,8 +2,10 @@
 
 #include <QMap>
 #include <QString>
+#include <QTime>
 
-#include "database_manager.h"
+#include "enums.h"
+#include "logs.h"
 
 
 // Triggers an Alert when the condition is met
@@ -94,6 +96,12 @@ struct RuleGroup {
     QMap<QString, QList<QDateTime>> entityTimestamps;
 
     RuleGroup(std::shared_ptr<Rule> r) : rule(std::move(r)) {
-        if (!rule->perHost) entityTimestamps.insert("global", QList<QDateTime>());
+        if (!rule->perHost) {
+            entityTimestamps.insert("global", QList<QDateTime>());
+            if (rule->triggerCondition == ComparisonOperator::lt || rule->triggerCondition == ComparisonOperator::lte) {
+                // 'heartbeat' rule, add a log at creation so it doesn't immediately trip
+                entityTimestamps["global"].append(QDateTime().currentDateTime());
+            }
+        }
     }
 };

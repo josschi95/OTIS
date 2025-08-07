@@ -4,6 +4,7 @@
 #include <QMainWindow>
 
 #include "logs_page.h"
+#include "rules_page.h"
 #include "testwindow.h"
 
 
@@ -31,6 +32,7 @@ private:
     QList<QPushButton*> pageSelectButtons;
 
     // Other pages
+    RulesPage* rulesPage;
     LogsPage* logsPage;
 
     //TESTING

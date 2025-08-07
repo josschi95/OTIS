@@ -3,6 +3,7 @@
 #include <QStackedWidget>
 
 #include "logs_page.h"
+#include "database_manager.h"
 
 
 LogsPage::LogsPage(QWidget *parent)
@@ -60,8 +61,8 @@ void LogsPage::refreshLogTable()
 
     filtersDialog->applyFilters(currentFilters);
 
-    const auto rows = DatabaseManager::queryDB(currentFilters);
-    qDebug() << "DB query rows returned: " << rows.size();
+    const auto rows = DatabaseManager::queryLogs(currentFilters);
+    //qDebug() << "DB query rows returned: " << rows.size();
 
     for (const auto& row : rows) {
         addRow(row);
