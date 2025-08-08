@@ -12,6 +12,8 @@ NewRuleDialog::NewRuleDialog(QWidget *parent)
 
     QIntValidator *facValidator = new QIntValidator(0, 23, this);
     ui->facilityLineEdit->setValidator(facValidator);
+
+    connect(this, &QDialog::accepted, this, &NewRuleDialog::parseNewRule);
 }
 
 NewRuleDialog::~NewRuleDialog()
@@ -21,8 +23,6 @@ NewRuleDialog::~NewRuleDialog()
 
 void NewRuleDialog::reset()
 {
-    //TODO: reset all properties
-
     ui->severityComboBox->setCurrentIndex(0);
     ui->facilityComboBox->setCurrentIndex(0);
     ui->hostnameComboBox->setCurrentIndex(0);
@@ -43,4 +43,95 @@ void NewRuleDialog::reset()
 
     ui->limitTimeEdit->setTime(QTime());
     ui->perHostCheckBox->setCheckState(Qt::CheckState::Unchecked);
+    ui->ruleEnabledCheckBox->setCheckState(Qt::CheckState::Checked);
 }
+
+// TODO: Maybe check periodically and disable/enable Confirm button?
+bool NewRuleDialog::ruleIsValid()
+{
+    // Just need to check that there is at least *some* value to compare
+    if (!ui->severityLineEdit->text().isEmpty()) return true;
+    if (!ui->facilityLineEdit->text().isEmpty()) return true;
+    if (!ui->hostnameLineEdit->text().isEmpty()) return true;
+    if (!ui->appnameLineEdit->text().isEmpty()) return true;
+    if (!ui->procidLineEdit->text().isEmpty()) return true;
+    if (!ui->msgidLineEdit->text().isEmpty()) return true;
+    if (!ui->msgLineEdit->text().isEmpty()) return true;
+
+    // if a threshold is declared, needs to have a valid time value
+    if (!ui->limitLineEdit->text().isEmpty()) {
+        // If it's less than 5 seconds, set it 5 seconds (RuleManager update time)
+        int windowMs = QTime(0, 0).msecsTo(ui->limitTimeEdit->time());
+        if (windowMs < 5000) ui->limitTimeEdit->time().setHMS(0, 0, 5);
+
+        return true;
+    }
+
+    return false;
+}
+
+void NewRuleDialog::parseNewRule()
+{
+    if (!ruleIsValid()) return;
+
+    auto newRule = std::make_shared<Rule>();
+
+    newRule->name = ui->nameLineEdit->text();
+    newRule->enabled = ui->ruleEnabledCheckBox->isChecked();
+    newRule->perHost = ui->perHostCheckBox->isChecked();
+
+    if (!ui->severityLineEdit->text().isEmpty()) {
+        newRule->severity = ui->severityLineEdit->text().toInt();
+        newRule->severityOp = static_cast<ComparisonOperator>(ui->severityComboBox->currentIndex());
+    }
+
+    if (!ui->facilityLineEdit->text().isEmpty()) {
+        newRule->facility = ui->facilityLineEdit->text().toInt();
+        newRule->facilityOp = static_cast<ComparisonOperator>(ui->facilityComboBox->currentIndex());
+    }
+
+    if (!ui->hostnameLineEdit->text().isEmpty()) {
+        newRule->hostnameValue = ui->hostnameLineEdit->text();
+        newRule->hostnameOp = static_cast<StringComparison>(ui->hostnameComboBox->currentIndex());
+    }
+
+    if (!ui->appnameLineEdit->text().isEmpty()) {
+        newRule->appnameValue = ui->appnameLineEdit->text();
+        newRule->appnameOp = static_cast<StringComparison>(ui->appnameComboBox->currentIndex());
+    }
+
+    if (!ui->procidLineEdit->text().isEmpty()) {
+        newRule->procIDValue = ui->procidLineEdit->text();
+        newRule->procIDOp = static_cast<StringComparison>(ui->procidComboBox->currentIndex());
+    }
+
+    if (!ui->msgidLineEdit->text().isEmpty()) {
+        newRule->msgIDValue = ui->msgidLineEdit->text();
+        newRule->msgIDOp = static_cast<StringComparison>(ui->msgidComboBox->currentIndex());
+    }
+
+    if (!ui->msgLineEdit->text().isEmpty()) {
+        newRule->messageValue = ui->msgLineEdit->text();
+        newRule->messageOp = static_cast<StringComparison>(ui->msgComboBox->currentIndex());
+    }
+
+    if (!ui->limitLineEdit->text().isEmpty()) {
+        newRule->thresholdCount = ui->limitLineEdit->text().toInt();
+        newRule->timeWindow = ui->limitTimeEdit->time();
+        // Plus 2 because == and != aren't valid nor included
+        newRule->triggerCondition = static_cast<ComparisonOperator>(ui->limitComboBox->currentIndex() + 2);
+    }
+
+    qWarning() << "Need to pass off this new rule somehow";
+    // DatabaseManager is a singleton, could pass it through there?
+    // Then DB can emit a signal
+    // RulesManager will listen for signal to add/edit rule
+    // RulesPage can listen for signal to refresh table
+}
+
+void NewRuleDialog::setRuleToEdit(std::shared_ptr<Rule> Rule)
+{
+
+}
+
+

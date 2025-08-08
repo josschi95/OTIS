@@ -24,9 +24,11 @@ public slots:
 
 private slots:
     void refreshRulesTable();
+    void openEditRuleDialog();
 
 private:
     bool initialized = false;
     QTableWidget *rulesTable;
+    QPushButton *editRuleButton;
     NewRuleDialog *newRuleDialog = nullptr;
 };

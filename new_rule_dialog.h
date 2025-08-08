@@ -2,6 +2,9 @@
 
 #include <QDialog>
 
+#include "rules.h"
+
+
 namespace Ui {
 class NewRuleDialog;
 }
@@ -14,7 +17,12 @@ public:
     explicit NewRuleDialog(QWidget *parent = nullptr);
     ~NewRuleDialog();
     void reset();
+    void setRuleToEdit(std::shared_ptr<Rule> Rule);
+
+private slots:
+    void parseNewRule();
 
 private:
     Ui::NewRuleDialog *ui;
+    bool ruleIsValid();
 };

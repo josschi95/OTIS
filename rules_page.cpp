@@ -13,7 +13,6 @@ RulesPage::RulesPage(QWidget *parent)
 
 void RulesPage::initialize()
 {
-//newRuleButton
     if (initialized) return;
     initialized = true;
 
@@ -26,7 +25,14 @@ void RulesPage::initialize()
         qWarning() << "filtersButton not found";
     }
 
+    editRuleButton = this->findChild<QPushButton*>("editRuleButton");
+    connect(editRuleButton, &QPushButton::clicked, this, &RulesPage::openEditRuleDialog);
+    connect(rulesTable->selectionModel(), &QItemSelectionModel::selectionChanged, this, [&]() {
+        editRuleButton->setEnabled(rulesTable->selectionModel()->hasSelection());
+    });
+
     newRuleDialog = new NewRuleDialog(this);
+    // I will probably need to have a custom signal in NewRuleDialog so I don't have a race condition between refreshing and submitting rule
     connect(newRuleDialog, &QDialog::finished, this, [=](int result) {
         if (result == QDialog::Accepted) {
             refreshRulesTable();
@@ -35,7 +41,8 @@ void RulesPage::initialize()
     });
 
     // TESTING
-    auto newRule = Rule();
+    // Uncomment these if erasing the db to add rules for testing
+    /*auto newRule = Rule();
     newRule.name = "Multiple Failed Logins";
     newRule.msgIDValue = "LOGIN_FAILURE";
     newRule.msgIDOp = StringComparison::ExactMatch;
@@ -51,9 +58,8 @@ void RulesPage::initialize()
     noLogRule.triggerCondition = ComparisonOperator::lt;
 
     DatabaseManager::addRule(newRule);
-    DatabaseManager::addRule(noLogRule);
+    DatabaseManager::addRule(noLogRule);*/
     // TESTING
-
 
     refreshRulesTable();
 }
@@ -62,8 +68,12 @@ void RulesPage::addRow(const QStringList &row)
 {
     const int newRow = rulesTable->rowCount();
     rulesTable->insertRow(newRow);
-    for (int c = 0; c < row.size(); ++c) {
+
+    int id = row.last().toInt(); // id is added to end of list
+    for (int c = 0; c < row.size()-1; ++c) {
         rulesTable->setItem(newRow, c, new QTableWidgetItem(row[c]));
+        // Need reference to rule id for when selecting a row to edit the rule
+        if (c == 0) rulesTable->itemAt(newRow, c)->setData(Qt::UserRole, id);
     }
 }
 
@@ -84,4 +94,10 @@ void RulesPage::refreshRulesTable()
     for (const auto& row : rows) {
         addRow(row);
     }
+}
+
+void RulesPage::openEditRuleDialog()
+{
+
+    openNewRuleDialog();
 }

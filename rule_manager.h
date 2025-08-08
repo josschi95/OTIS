@@ -16,6 +16,7 @@ public:
     bool addRule(std::shared_ptr<Rule> rule);
     void deleteRule(const Rule& rule);
     QList<std::shared_ptr<Rule>> getRules() const;
+    std::shared_ptr<Rule> getRuleById(int id) const;
     void checkRules(const LogEntry& log);
 
 signals:

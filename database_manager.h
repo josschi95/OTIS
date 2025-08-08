@@ -12,7 +12,7 @@ public:
     static QStringList insertLog(const LogEntry& logEntry);
     static QList<QStringList> queryLogs(const LogFilters& filters);
     static int logCount();
-    static void addRule(const Rule& rule);
+    static void addRule(Rule& rule);
     static QList<QStringList> queryRules();
 
 signals:

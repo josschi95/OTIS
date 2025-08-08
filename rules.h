@@ -12,6 +12,7 @@
 struct Rule {
     ~Rule() = default;
 
+    int id = -1;
     QString name; // really just for user convenience
     bool enabled = true; // if true, will generate alerts
 

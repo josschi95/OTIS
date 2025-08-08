@@ -29,32 +29,44 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${PROJECT_SOURCES}
         syslog_receiver.h
         syslog_receiver.cpp
+
         log_parser.h
         log_parser.cpp
+
         database_manager.h
         database_manager.cpp
 
-        testwindow.h testwindow.cpp testwindow.ui
-        filter_header.h
-        filter_header.cpp
-        TODO.txt
-        customdatetimerangedialog.h customdatetimerangedialog.cpp customdatetimerangedialog.ui
         settings_manager.h
         settings_manager.cpp
-        log_format.json
-        test_logs.txt
-        tablefiltersdialog.h tablefiltersdialog.cpp tablefiltersdialog.ui
+
+        tablefiltersdialog.h
+        tablefiltersdialog.cpp
+        tablefiltersdialog.ui
+
         logs_page.h
         logs_page.cpp
+
         rules.h
         rule_manager.h
         rule_manager.cpp
-        test_rules.json
-        new_rule_dialog.h new_rule_dialog.cpp new_rule_dialog.ui
+
+        new_rule_dialog.h
+        new_rule_dialog.cpp
+        new_rule_dialog.ui
+
         rules_page.h
         rules_page.cpp
         enums.h
         logs.h
+
+        testwindow.h
+        testwindow.cpp
+        testwindow.ui
+
+        log_format.json
+        test_rules.json
+        test_logs.txt
+        TODO.txt
     )
 
 # Define target properties for Android with Qt 6 as:

@@ -259,7 +259,7 @@ QString DatabaseManager::facilityString(const int facility)
 }
 
 
-void DatabaseManager::addRule(const Rule& rule)
+void DatabaseManager::addRule(Rule& rule)
 {
     static const QMap<ComparisonOperator, QString> compMap = {
         { ComparisonOperator::eq, "==" },
@@ -303,13 +303,21 @@ void DatabaseManager::addRule(const Rule& rule)
 
     if (!query.exec()) {
         qDebug() << "Insert failed: " << query.lastError().text();
+    } else {
+        QVariant lastId = query.lastInsertId();
+        if (!lastId.isValid()) {
+            qDebug() << "Could not retrieve last insert ID.";
+            return;
+        }
+        int id = lastId.toInt();
+        rule.id = id;
     }
 }
 
 
 QList<QStringList> DatabaseManager::queryRules()
 {
-    QString sql = "SELECT name, severity, severityOp, facility, facilityOp, hostname, hostnameOp, appname, appnameOp, procid, procidOp, msgid, msgidOp, message, messageOp, threshold, timeWindow, threshOp, perHost FROM rules";
+    QString sql = "SELECT name, severity, severityOp, facility, facilityOp, hostname, hostnameOp, appname, appnameOp, procid, procidOp, msgid, msgidOp, message, messageOp, threshold, timeWindow, threshOp, perHost, id FROM rules";
     QSqlQuery query(instance());
 
     if (!query.exec(sql)) {
@@ -326,18 +334,47 @@ QList<QStringList> DatabaseManager::queryRules()
 
 QStringList DatabaseManager::getRuleRow(const QSqlQuery& query)
 {
+    // Values are checked and replaced with "-" if empty
+    // Trying to make things look somewhat presentable
+
     QStringList row;
     row << query.value(0).toString(); // name
-    row << QString(query.value(2).toString() + query.value(1).toString()); // severity
-    row << QString(query.value(4).toString() + query.value(3).toString()); // facility
-    row << QString(query.value(6).toString() + ": " + query.value(5).toString()); // hostname
-    row << QString(query.value(8).toString() + ": " + query.value(7).toString()); // appname
-    row << QString(query.value(10).toString() + ": " + query.value(9).toString()); // procid
-    row << QString(query.value(12).toString() + ": " + query.value(11).toString()); // msgid
-    row << QString(query.value(14).toString() + ": " + query.value(13).toString()); // message
-    //TODO: Change appearance for this if it's not being used
-    row << QString(query.value(17).toString() + query.value(15).toString() + " in " + query.value(16).toString()); // limit
-    row << query.value(18).toString(); // per-host
 
+    // Severity(1) and Facility(3)
+    for (int i = 1; i < 5; i+=2) {
+        int value = query.value(i).toInt();
+        if (value >= 0) {
+            row << QString(query.value(i+1).toString() + QString::number(value));
+        } else {
+            row << "-";
+        }
+    }
+
+    // hostname(5), appname, procid, msgid, and message(13) all follow the same rules
+    // The string comparison = index + 1
+    for (int i = 5; i < 14; i+=2) {
+        QString fieldName = query.value(i).toString();
+        if (!fieldName.isEmpty()) {
+            row << QString(query.value(i + 1).toString() + ": " + fieldName);
+        } else {
+            row << "-";
+        }
+    }
+
+    // threshold=15, timeWindow=16, threshOp=17
+    int thresh = query.value(15).toInt();
+    if (thresh >= 0) {
+        row << QString(query.value(17).toString() + " " + QString::number(thresh) + " in " + query.value(16).toString());
+    } else {
+        row << "-";
+    }
+
+    if (query.value(18).toInt() == 0) { // Per-Host bool
+        row << "False";
+    } else {
+        row << "True";
+    }
+
+    row << query.value(19).toString(); // database id
     return row;
 }

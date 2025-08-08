@@ -66,6 +66,14 @@ QList<std::shared_ptr<Rule>> RuleManager::getRules() const
     return rules;
 }
 
+std::shared_ptr<Rule> RuleManager::getRuleById(int id) const
+{
+    for (const auto& rule : rules) {
+        if (rule->id == id) return rule;
+    }
+    return NULL;
+}
+
 bool RuleManager::addRule(std::shared_ptr<Rule> rule)
 {
     if (!rule) return false;
