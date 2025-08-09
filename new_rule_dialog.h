@@ -17,7 +17,7 @@ public:
     explicit NewRuleDialog(QWidget *parent = nullptr);
     ~NewRuleDialog();
     void reset();
-    void setRuleToEdit(std::shared_ptr<Rule> Rule);
+    void setRuleToEdit(std::shared_ptr<Rule> rule);
 
 private slots:
     void parseNewRule();

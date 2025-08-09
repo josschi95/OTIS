@@ -5,23 +5,35 @@
 #include "rules.h"
 
 
-class DatabaseManager
+class DatabaseManager : public QObject
 {
+    Q_OBJECT
+
 public:
-    static QSqlDatabase& instance();
-    static QStringList insertLog(const LogEntry& logEntry);
-    static QList<QStringList> queryLogs(const LogFilters& filters);
-    static int logCount();
-    static void addRule(Rule& rule);
-    static QList<QStringList> queryRules();
+    static DatabaseManager& instance();
+
+    //static QSqlDatabase& instance();
+    void insertLog(const LogEntry& logEntry);
+    QList<QStringList> queryLogs(const LogFilters& filters);
+    QList<std::shared_ptr<Rule>> loadRules();
+    QList<QStringList> queryRules();
+    void addRule(Rule& rule);
+    int logCount();
+    int ruleCount();
 
 signals:
     void databaseUpdated();
+    void logInserted(const QStringList& row);
 
 private:
-    DatabaseManager() = default;
-    static QStringList getLogRow(const QSqlQuery& query);
-    static QStringList getRuleRow(const QSqlQuery& query);
-    static QString severityString(const int severity);
-    static QString facilityString(const int facility);
+    explicit DatabaseManager(QObject *parent = nullptr) : QObject(parent) {}
+    Q_DISABLE_COPY(DatabaseManager)
+
+    //DatabaseManager() = default;
+    QStringList getLogRow(const QSqlQuery& query);
+    QStringList getRuleRow(const QSqlQuery& query);
+    QString severityString(const int severity);
+    QString facilityString(const int facility);
+
+    QSqlDatabase db;
 };

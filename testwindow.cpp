@@ -13,25 +13,47 @@ TestWindow::TestWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    if (DatabaseManager::logCount() > 0) return;
-    // Submit some filler logs if the db is empty
-    qDebug() << "Adding filler logs";
-    QFile file("test_logs.txt");
-    if (!file.open(QIODevice::ReadOnly)) {
-        qWarning() << "Unable to open test_log file: " << file.errorString();
-        return;
-    }
-
-    QTextStream in(&file);
-
-    while (!in.atEnd()) {
-        QString line = in.readLine().trimmed();
-        if (!line.isEmpty()) {
-            sendTestLog(line.toUtf8());
+    if (DatabaseManager::instance().logCount() == 0) { // TESTING
+        // Submit some filler logs if the db is empty
+        qDebug() << "Adding filler logs";
+        QFile file("test_logs.txt");
+        if (!file.open(QIODevice::ReadOnly)) {
+            qWarning() << "Unable to open test_log file: " << file.errorString();
+            return;
         }
+
+        QTextStream in(&file);
+
+        while (!in.atEnd()) {
+            QString line = in.readLine().trimmed();
+            if (!line.isEmpty()) {
+                sendTestLog(line.toUtf8());
+            }
+        }
+
+        file.close();
     }
 
-    file.close();
+    if (DatabaseManager::instance().ruleCount() == 0) { // TESTING
+
+        auto failedLoginsRule = Rule();
+        failedLoginsRule.name = "Multiple Failed Logins";
+        failedLoginsRule.msgIDValue = "LOGIN_FAILURE";
+        failedLoginsRule.msgIDOp = StringComparison::ExactMatch;
+        failedLoginsRule.perHost = true;
+        failedLoginsRule.thresholdCount = 3;
+        failedLoginsRule.timeWindow = QTime().fromString("00:01:00");
+        failedLoginsRule.triggerCondition = ComparisonOperator::gte;
+
+        auto noLogRule = Rule();
+        noLogRule.name = "No Incoming Logs";
+        noLogRule.thresholdCount = 1;
+        noLogRule.timeWindow = QTime().fromString("00:01:00");
+        noLogRule.triggerCondition = ComparisonOperator::lt;
+
+        DatabaseManager::instance().addRule(failedLoginsRule);
+        DatabaseManager::instance().addRule(noLogRule);
+    }
 }
 
 TestWindow::~TestWindow()

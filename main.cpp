@@ -16,20 +16,19 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    DatabaseManager::instance();
+    DatabaseManager::instance(); // has to be first since others will call on it
+    MainWindow window; // has to be before RuleManager because this will create TestWindow which populates db will filler if empty
     SyslogReceiver receiver;
     RuleManager ruleManager;
-    MainWindow window;
     LogParser parser;
+
+    window.passRulesManager(ruleManager);
 
     // Log comes in -> Parsed into LogEntry -> Stored in DB -> Checked against Rules -> Added to Display
     QObject::connect(&receiver, &SyslogReceiver::logReceived, &window, [&](const QString &line) {
         const auto logEntry = parser.parse(line);
-        // Returning row from DB here so it reuses same format as rest of table
-        // LogsPage doesn't need to know what a LogEntry is
-        const auto row = DatabaseManager::insertLog(logEntry);
+        DatabaseManager::instance().insertLog(logEntry);
         ruleManager.checkRules(logEntry);
-        window.getLogsPage()->addRow(row);
     });
 
     QObject::connect(&ruleManager, &RuleManager::ruleViolated, &window, [&](std::shared_ptr<Rule> violatedRule) {

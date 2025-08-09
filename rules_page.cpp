@@ -27,6 +27,7 @@ void RulesPage::initialize()
 
     editRuleButton = this->findChild<QPushButton*>("editRuleButton");
     connect(editRuleButton, &QPushButton::clicked, this, &RulesPage::openEditRuleDialog);
+
     connect(rulesTable->selectionModel(), &QItemSelectionModel::selectionChanged, this, [&]() {
         editRuleButton->setEnabled(rulesTable->selectionModel()->hasSelection());
     });
@@ -39,27 +40,6 @@ void RulesPage::initialize()
         }
         newRuleDialog->reset();
     });
-
-    // TESTING
-    // Uncomment these if erasing the db to add rules for testing
-    /*auto newRule = Rule();
-    newRule.name = "Multiple Failed Logins";
-    newRule.msgIDValue = "LOGIN_FAILURE";
-    newRule.msgIDOp = StringComparison::ExactMatch;
-    newRule.perHost = true;
-    newRule.thresholdCount = 3;
-    newRule.timeWindow = QTime().fromString("00:01:00");
-    newRule.triggerCondition = ComparisonOperator::gte;
-
-    auto noLogRule = Rule();
-    noLogRule.name = "No Incoming Logs";
-    noLogRule.thresholdCount = 1;
-    noLogRule.timeWindow = QTime().fromString("00:01:00");
-    noLogRule.triggerCondition = ComparisonOperator::lt;
-
-    DatabaseManager::addRule(newRule);
-    DatabaseManager::addRule(noLogRule);*/
-    // TESTING
 
     refreshRulesTable();
 }
@@ -77,6 +57,11 @@ void RulesPage::addRow(const QStringList &row)
     }
 }
 
+void RulesPage::setRulesManager(RuleManager &rm)
+{
+    ruleManager = &rm;
+}
+
 void RulesPage::openNewRuleDialog()
 {
     newRuleDialog->show();
@@ -88,7 +73,7 @@ void RulesPage::refreshRulesTable()
 {
     rulesTable->setRowCount(0); // Clear table
 
-    const auto rows = DatabaseManager::queryRules();
+    const auto rows = DatabaseManager::instance().queryRules();
     //qDebug() << "DB query rows returned: " << rows.size();
 
     for (const auto& row : rows) {
@@ -98,6 +83,11 @@ void RulesPage::refreshRulesTable()
 
 void RulesPage::openEditRuleDialog()
 {
-
-    openNewRuleDialog();
+    QTableWidgetItem* item = rulesTable->item(rulesTable->currentRow(), 0);
+    int id = item->data(Qt::UserRole).value<int>();
+    auto rule = ruleManager->getRuleById(id);
+    if (rule != nullptr) {
+        newRuleDialog->setRuleToEdit(rule);
+        openNewRuleDialog();
+    }
 }

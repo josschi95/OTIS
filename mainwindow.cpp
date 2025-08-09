@@ -17,12 +17,9 @@ MainWindow::MainWindow(QWidget *parent)
         });
     }
 
-    // Other Pages here
+    // Initialize promoted widgets
     ui->page2_rules->initialize();
-    rulesPage = ui->page2_rules;
-
     ui->page3_logs->initialize();
-    logsPage = ui->page3_logs; // Do I need to store this?
 
     onTestWindowButtonClicked();
 }
@@ -31,6 +28,14 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
+
+
+void MainWindow::passRulesManager(RuleManager &ruleManager)
+{
+    ui->page2_rules->setRulesManager(ruleManager);
+}
+
+
 
 void MainWindow::onTestWindowButtonClicked()
 {

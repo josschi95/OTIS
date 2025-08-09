@@ -10,8 +10,10 @@
 
 // Need to do this since Qt doesn't like a static non-POD db
 // There's *probably* a better way to do this... I just don't know it
-QSqlDatabase& DatabaseManager::instance()
+DatabaseManager& DatabaseManager::instance()
 {
+    static DatabaseManager instance;
+
     static bool initialized = false;
     static QSqlDatabase db;
 
@@ -76,7 +78,7 @@ QSqlDatabase& DatabaseManager::instance()
         initialized = true;
     }
 
-    return db;
+    return instance;
 }
 
 int DatabaseManager::logCount()
@@ -90,8 +92,19 @@ int DatabaseManager::logCount()
     return 0;
 }
 
+int DatabaseManager::ruleCount()
+{
+    QSqlQuery countQuery;
+    if (countQuery.exec("SELECT COUNT(*) FROM rules")) {
+        if (countQuery.next()) {
+            return countQuery.value(0).toInt();
+        }
+    }
+    return 0;
+}
 
-QStringList DatabaseManager::insertLog(const LogEntry& logEntry)
+
+void DatabaseManager::insertLog(const LogEntry& logEntry)
 {
     QSqlQuery query;
     query.prepare(R"(
@@ -110,13 +123,13 @@ QStringList DatabaseManager::insertLog(const LogEntry& logEntry)
 
     if (!query.exec()) {
         qDebug() << "Insert failed: " << query.lastError().text();
-        return {};
+        return;
     }
 
     QVariant lastId = query.lastInsertId();
     if (!lastId.isValid()) {
         qDebug() << "Could not retrieve last insert ID.";
-        return {};
+        return;
     }
 
     QSqlQuery last;
@@ -124,10 +137,10 @@ QStringList DatabaseManager::insertLog(const LogEntry& logEntry)
     last.addBindValue(lastId);
     if (!last.exec() || !last.next()) {
         qDebug() << "Failed to fetch inserted row: " << last.lastError().text();
-        return {};
+        return;
     }
 
-    return getLogRow(last);
+    emit logInserted(getLogRow(last));
 }
 
 
@@ -161,7 +174,7 @@ QList<QStringList> DatabaseManager::queryLogs(const LogFilters& filters)
         sql += " AND message LIKE :message";
     sql += " ORDER BY timestamp DESC";
 
-    QSqlQuery query(instance());
+    QSqlQuery query(db);
     query.prepare(sql);
 
     if (filters.severity >= 0 && filters.severity <= 7)
@@ -259,46 +272,74 @@ QString DatabaseManager::facilityString(const int facility)
 }
 
 
+QList<std::shared_ptr<Rule>> DatabaseManager::loadRules()
+{
+    QString sql = "SELECT id, name, severity, severityOp, facility, facilityOp, hostname, hostnameOp, appname, appnameOp, procid, procidOp, msgid, msgidOp, message, messageOp, threshold, timeWindow, threshOp, perHost FROM rules";
+    QSqlQuery query(db);
+
+    if (!query.exec(sql)) {
+        qWarning() << "Database rules query failed: " << query.lastError().text();
+        return {};
+    }
+
+    QList<std::shared_ptr<Rule>> rules;
+    while (query.next()) {
+        auto rule = std::make_shared<Rule>();
+
+        rule->id = query.value(0).toInt();
+        rule->name = query.value(1).toString();
+        rule->severity = query.value(2).toInt();
+        rule->severityOp = static_cast<ComparisonOperator>(query.value(3).toInt());
+        rule->facility = query.value(4).toInt();
+        rule->facilityOp = static_cast<ComparisonOperator>(query.value(5).toInt());
+        rule->hostnameValue = query.value(6).toString();
+        rule->hostnameOp = static_cast<StringComparison>(query.value(7).toInt());
+        rule->appnameValue = query.value(8).toString();
+        rule->appnameOp = static_cast<StringComparison>(query.value(9).toInt());
+        rule->procIDValue = query.value(10).toString();
+        rule->procIDOp = static_cast<StringComparison>(query.value(11).toInt());
+        rule->msgIDValue = query.value(12).toString();
+        rule->msgIDOp = static_cast<StringComparison>(query.value(13).toInt());
+        rule->messageValue = query.value(14).toString();
+        rule->messageOp = static_cast<StringComparison>(query.value(15).toInt());
+        rule->thresholdCount = query.value(16).toInt();
+        rule->timeWindow = QTime::fromString(query.value(17).toString());
+        rule->triggerCondition = static_cast<ComparisonOperator>(query.value(18).toInt());
+        rule->perHost = query.value(19).toBool();
+
+        rules << rule;
+    }
+
+    return rules;
+}
+
+
 void DatabaseManager::addRule(Rule& rule)
 {
-    static const QMap<ComparisonOperator, QString> compMap = {
-        { ComparisonOperator::eq, "==" },
-        { ComparisonOperator::ne, "!=" },
-        { ComparisonOperator::lt, "<" },
-        { ComparisonOperator::lte, "<=" },
-        { ComparisonOperator::gt, ">" },
-        { ComparisonOperator::gte, ">=" }
-    };
-
-    static const QMap<StringComparison, QString> stringMap = {
-        { StringComparison::ExactMatch, "Exact" },
-        { StringComparison::Contains, "Contains" },
-        { StringComparison::StartsWith, "Starts With" }
-    };
-
     QSqlQuery query;
     query.prepare(R"(
         INSERT INTO rules (name, severity, severityOp, facility, facilityOp, hostname, hostnameOp, appname, appnameOp, procid, procidOp, msgid, msgidOp, message, messageOp, threshold, timeWindow, threshOp, perHost)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     )");
+
     query.addBindValue(rule.name);
     query.addBindValue(rule.severity);
-    query.addBindValue(compMap[rule.severityOp]);
+    query.addBindValue(static_cast<int>(rule.severityOp));
     query.addBindValue(rule.facility);
-    query.addBindValue(compMap[rule.facilityOp]);
+    query.addBindValue(static_cast<int>(rule.facilityOp));
     query.addBindValue(rule.hostnameValue);
-    query.addBindValue(stringMap[rule.hostnameOp]);
+    query.addBindValue(static_cast<int>(rule.hostnameOp));
     query.addBindValue(rule.appnameValue);
-    query.addBindValue(stringMap[rule.appnameOp]);
+    query.addBindValue(static_cast<int>(rule.appnameOp));
     query.addBindValue(rule.procIDValue);
-    query.addBindValue(stringMap[rule.procIDOp]);
+    query.addBindValue(static_cast<int>(rule.procIDOp));
     query.addBindValue(rule.msgIDValue);
-    query.addBindValue(stringMap[rule.msgIDOp]);
+    query.addBindValue(static_cast<int>(rule.msgIDOp));
     query.addBindValue(rule.messageValue);
-    query.addBindValue(stringMap[rule.messageOp]);
+    query.addBindValue(static_cast<int>(rule.messageOp));
     query.addBindValue(rule.thresholdCount);
     query.addBindValue(rule.timeWindow);
-    query.addBindValue(compMap[rule.triggerCondition]);
+    query.addBindValue(static_cast<int>(rule.triggerCondition));
     query.addBindValue(rule.perHost);
 
     if (!query.exec()) {
@@ -318,7 +359,7 @@ void DatabaseManager::addRule(Rule& rule)
 QList<QStringList> DatabaseManager::queryRules()
 {
     QString sql = "SELECT name, severity, severityOp, facility, facilityOp, hostname, hostnameOp, appname, appnameOp, procid, procidOp, msgid, msgidOp, message, messageOp, threshold, timeWindow, threshOp, perHost, id FROM rules";
-    QSqlQuery query(instance());
+    QSqlQuery query(db);
 
     if (!query.exec(sql)) {
         qWarning() << "Database rules query failed: " << query.lastError().text();
@@ -333,7 +374,10 @@ QList<QStringList> DatabaseManager::queryRules()
 
 
 QStringList DatabaseManager::getRuleRow(const QSqlQuery& query)
-{
+{    
+    static const QStringList opStrings = { "==", "!=", "<", "<=", ">", ">=" };
+    static const QStringList compStrings = { "Exact", "Contains", "Starts With" };
+
     // Values are checked and replaced with "-" if empty
     // Trying to make things look somewhat presentable
 
@@ -344,7 +388,7 @@ QStringList DatabaseManager::getRuleRow(const QSqlQuery& query)
     for (int i = 1; i < 5; i+=2) {
         int value = query.value(i).toInt();
         if (value >= 0) {
-            row << QString(query.value(i+1).toString() + QString::number(value));
+            row << QString(opStrings[query.value(i+1).toInt()] + QString::number(value));
         } else {
             row << "-";
         }
@@ -355,7 +399,7 @@ QStringList DatabaseManager::getRuleRow(const QSqlQuery& query)
     for (int i = 5; i < 14; i+=2) {
         QString fieldName = query.value(i).toString();
         if (!fieldName.isEmpty()) {
-            row << QString(query.value(i + 1).toString() + ": " + fieldName);
+            row << QString(compStrings[query.value(i+1).toInt()] + ": " + fieldName);
         } else {
             row << "-";
         }

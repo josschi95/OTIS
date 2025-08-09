@@ -14,6 +14,8 @@ NewRuleDialog::NewRuleDialog(QWidget *parent)
     ui->facilityLineEdit->setValidator(facValidator);
 
     connect(this, &QDialog::accepted, this, &NewRuleDialog::parseNewRule);
+
+    qDebug() << "TODO: Pass off new Rule values and edited rule values!";
 }
 
 NewRuleDialog::~NewRuleDialog()
@@ -42,8 +44,8 @@ void NewRuleDialog::reset()
     ui->limitLineEdit->setText(QString());
 
     ui->limitTimeEdit->setTime(QTime());
-    ui->perHostCheckBox->setCheckState(Qt::CheckState::Unchecked);
-    ui->ruleEnabledCheckBox->setCheckState(Qt::CheckState::Checked);
+    ui->perHostCheckBox->setChecked(false);
+    ui->ruleEnabledCheckBox->setChecked(true);
 }
 
 // TODO: Maybe check periodically and disable/enable Confirm button?
@@ -129,9 +131,35 @@ void NewRuleDialog::parseNewRule()
     // RulesPage can listen for signal to refresh table
 }
 
-void NewRuleDialog::setRuleToEdit(std::shared_ptr<Rule> Rule)
+void NewRuleDialog::setRuleToEdit(std::shared_ptr<Rule> rule)
 {
+    qDebug() << "Editing rule: " << rule->name;
 
+    ui->nameLineEdit->setText(rule->name);
+    ui->ruleEnabledCheckBox->setChecked(rule->enabled);
+    ui->perHostCheckBox->setChecked(rule->perHost);
+
+    ui->severityComboBox->setCurrentIndex(static_cast<int>(rule->severityOp));
+    ui->facilityComboBox->setCurrentIndex(static_cast<int>(rule->facilityOp));
+    ui->hostnameComboBox->setCurrentIndex(static_cast<int>(rule->hostnameOp));
+    ui->appnameComboBox->setCurrentIndex(static_cast<int>(rule->appnameOp));
+    ui->procidComboBox->setCurrentIndex(static_cast<int>(rule->procIDOp));
+    ui->msgidComboBox->setCurrentIndex(static_cast<int>(rule->msgIDOp));
+    ui->msgComboBox->setCurrentIndex(static_cast<int>(rule->messageOp));
+    // Minus 2 because == and != aren't valid/included
+    ui->limitComboBox->setCurrentIndex(static_cast<int>(rule->triggerCondition) - 2);
+
+    if (rule->severity >= 0) ui->severityLineEdit->setText(QString::number(rule->severity));
+    if (rule->facility >= 0) ui->facilityLineEdit->setText(QString::number(rule->facility));
+    if (rule->thresholdCount >= 0) ui->limitLineEdit->setText(QString::number(rule->thresholdCount));
+
+    ui->limitTimeEdit->setTime(rule->timeWindow);
+
+    ui->hostnameLineEdit->setText(rule->hostnameValue);
+    ui->appnameLineEdit->setText(rule->appnameValue);
+    ui->procidLineEdit->setText(rule->procIDValue);
+    ui->msgidLineEdit->setText(rule->msgIDValue);
+    ui->msgLineEdit->setText(rule->messageValue);
 }
 
 

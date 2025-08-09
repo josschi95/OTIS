@@ -1,28 +1,14 @@
 #include <QTimer>
 
 #include "rule_manager.h"
+#include "database_manager.h"
 
 
 RuleManager::RuleManager(QObject *parent) : QObject(parent)
 {
-    // Load Logs from JSON
-
-    auto newRule = std::make_shared<Rule>();
-    newRule->name = "Multiple Failed Logins";
-    newRule->msgIDValue = "LOGIN_FAILURE";
-    newRule->msgIDOp = StringComparison::ExactMatch;
-    newRule->perHost = true;
-    newRule->thresholdCount = 3;
-    newRule->timeWindow = QTime().fromString("00:01:00");
-    newRule->triggerCondition = ComparisonOperator::gte;
-    addRule(newRule);
-
-    auto noLogRule = std::make_shared<Rule>();
-    noLogRule->name = "No Incoming Logs";
-    noLogRule->thresholdCount = 1;
-    noLogRule->timeWindow = QTime().fromString("00:01:00");
-    noLogRule->triggerCondition = ComparisonOperator::lt;
-    addRule(noLogRule);
+    // Load in saved rules from db
+    auto rules = DatabaseManager::instance().loadRules();
+    for (const auto& rule : rules) addRule(rule);
 
     // Start Update loop
     updateTimer = new QTimer(this);
@@ -31,10 +17,11 @@ RuleManager::RuleManager(QObject *parent) : QObject(parent)
     updateTimer->start();
 }
 
+
 // Needed for tracking 'heartbeat' rules - those with a triggerCondition of < or <=
+// Have to do this because logs *not* coming in doesn't call any function to check
 void RuleManager::update()
 {
-    //qDebug() << "Update";
     QDateTime now = QDateTime::currentDateTime();
 
     for (auto& group : ruleGroups) {
@@ -77,7 +64,7 @@ std::shared_ptr<Rule> RuleManager::getRuleById(int id) const
 bool RuleManager::addRule(std::shared_ptr<Rule> rule)
 {
     if (!rule) return false;
-
+    qDebug() << "Adding rule: " << rule->name;
     //TODO: Check that rule is valid
 
     rules << rule;

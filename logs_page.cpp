@@ -35,6 +35,8 @@ void LogsPage::initialize()
         }
     });
 
+    connect(&DatabaseManager::instance(), &DatabaseManager::logInserted, this, &LogsPage::addRow);
+
     refreshLogTable();
 }
 
@@ -48,6 +50,7 @@ void LogsPage::openFiltersDialog()
 void LogsPage::addRow(const QStringList& row)
 {
     //TODO: Check if new rule matches current filter rules
+
     const int newRow = logTable->rowCount();
     logTable->insertRow(newRow);
     for (int c = 0; c < row.size(); ++c) {
@@ -61,7 +64,7 @@ void LogsPage::refreshLogTable()
 
     filtersDialog->applyFilters(currentFilters);
 
-    const auto rows = DatabaseManager::queryLogs(currentFilters);
+    const auto rows = DatabaseManager::instance().queryLogs(currentFilters);
     //qDebug() << "DB query rows returned: " << rows.size();
 
     for (const auto& row : rows) {

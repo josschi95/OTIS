@@ -2,10 +2,10 @@
 
 #include <QComboBox>
 #include <QMainWindow>
+#include <QPushButton>
 
-#include "logs_page.h"
-#include "rules_page.h"
 #include "testwindow.h"
+#include "rule_manager.h"
 
 
 QT_BEGIN_NAMESPACE
@@ -21,7 +21,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    LogsPage* getLogsPage() const { return logsPage; }
+    void passRulesManager(RuleManager& ruleManager);
 
 private slots:
     void onTestWindowButtonClicked();
@@ -30,10 +30,6 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QList<QPushButton*> pageSelectButtons;
-
-    // Other pages
-    RulesPage* rulesPage;
-    LogsPage* logsPage;
 
     //TESTING
     TestWindow *testWindow = nullptr;

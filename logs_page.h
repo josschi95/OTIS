@@ -18,10 +18,11 @@ class LogsPage : public QWidget
 public:
     explicit LogsPage(QWidget *parent = nullptr);
     void initialize();
-    void addRow(const QStringList& log);
+
 
 public slots:
     void openFiltersDialog();
+    void addRow(const QStringList& log);
 
 private slots:
     void refreshLogTable();

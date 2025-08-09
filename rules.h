@@ -8,46 +8,47 @@
 #include "logs.h"
 
 
+/*/home/joe/Projects/OTIS/rules.h:12:8: Excessive padding in 'struct Rule' (34 padding bytes, where 2 is optimal).
+ * Optimal fields order:
+ * name, hostnameValue, appnameValue, procIDValue, msgIDValue, messageValue, id, severity, severityOp,
+ * facility, facilityOp, hostnameOp, appnameOp, procIDOp, msgIDOp, messageOp, thresholdCount, timeWindow,
+ * triggerCondition, enabled, perHost
+ *
+ *
+ */
+
 // Triggers an Alert when the condition is met
 struct Rule {
     ~Rule() = default;
 
-    int id = -1;
     QString name; // really just for user convenience
-    bool enabled = true; // if true, will generate alerts
+    QString hostnameValue = QString();
+    QString appnameValue = QString();
+    QString procIDValue = QString();
+    QString msgIDValue = QString();
+    QString messageValue = QString();
 
+    int id = -1;
     int severity = -1;
     ComparisonOperator severityOp = ComparisonOperator::eq;
-
     int facility = -1;
     ComparisonOperator facilityOp = ComparisonOperator::eq;
-
-    QString hostnameValue = QString();
     StringComparison hostnameOp = StringComparison::ExactMatch;
-
-    QString appnameValue = QString();
     StringComparison appnameOp = StringComparison::ExactMatch;
-
-    QString procIDValue = QString();
     StringComparison procIDOp = StringComparison::ExactMatch;
-
-    QString msgIDValue = QString();
     StringComparison msgIDOp = StringComparison::ExactMatch;
-
     // structured data ?
-
-    QString messageValue = QString();
     StringComparison messageOp = StringComparison::ExactMatch;
-
-    /* So the way this should work...
-     *  thresholdCount = 3, timeWindow = 5 minutes, triggerCondition = gte: triggers if 3 or more logs evaluate to True within 5 minutes
-     *  thresholdCount = 1, timeWindow = 5 minutes, triggerCondition = lt: triggers if less than 1 log evaluate to True every 5 minutes
-    */
-
-    bool perHost = false; // if true, tracks separately per hostname (e.g. 3 failed logins from a single host, not *any* host)
     int thresholdCount = -1;
     QTime timeWindow = QTime();
     ComparisonOperator triggerCondition = ComparisonOperator::gte;
+    bool enabled = true; // if true, will generate alerts
+    bool perHost = false; // if true, tracks separately per hostname (e.g. 3 failed logins from a single host, not *any* host)
+
+    /* So the way threshold/timeWindow should work...
+     *  thresholdCount = 3, timeWindow = 5 minutes, triggerCondition = gte: triggers if 3 or more logs evaluate to True within 5 minutes
+     *  thresholdCount = 1, timeWindow = 5 minutes, triggerCondition = lt: triggers if less than 1 log evaluate to True every 5 minutes
+    */
 
     bool compare(ComparisonOperator op, int ruleValue, int logValue) const {
         switch (op) {

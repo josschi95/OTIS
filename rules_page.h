@@ -4,6 +4,7 @@
 #include <QTableWidget>
 
 #include "new_rule_dialog.h"
+#include "rule_manager.h"
 
 
 namespace Ui {
@@ -18,6 +19,7 @@ public:
     explicit RulesPage(QWidget *parent = nullptr);
     void initialize();
     void addRow(const QStringList& log);
+    void setRulesManager(RuleManager& rm);
 
 public slots:
     void openNewRuleDialog();
@@ -31,4 +33,5 @@ private:
     QTableWidget *rulesTable;
     QPushButton *editRuleButton;
     NewRuleDialog *newRuleDialog = nullptr;
+    RuleManager *ruleManager = nullptr;
 };
