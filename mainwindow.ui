@@ -14,7 +14,7 @@
    <string>OTIS - Operational Technology Insight &amp; Security</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">background-color: rgb(28, 37, 59);</string>
+   <string notr="true"/>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -84,7 +84,7 @@
           </size>
          </property>
          <property name="styleSheet">
-          <string notr="true">background-color: rgb(44, 70, 106);</string>
+          <string notr="true"/>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_2">
           <property name="spacing">

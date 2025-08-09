@@ -21,8 +21,10 @@ public:
 
 private slots:
     void parseNewRule();
+    void deleteRule();
 
 private:
     Ui::NewRuleDialog *ui;
+    std::shared_ptr<Rule> ruleToEdit = nullptr;
     bool ruleIsValid();
 };

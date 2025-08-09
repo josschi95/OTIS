@@ -68,7 +68,8 @@ DatabaseManager& DatabaseManager::instance()
                     threshold NUMBER,
                     timeWindow TEXT,
                     threshOp NUMBER,
-                    perHost BOOLEAN
+                    perHost BOOLEAN,
+                    enabled BOOLEAN
                 )
             )")) {
                 qCritical() << "Failed to create rules table:" << rulesQuery.lastError().text();
@@ -274,7 +275,7 @@ QString DatabaseManager::facilityString(const int facility)
 
 QList<std::shared_ptr<Rule>> DatabaseManager::loadRules()
 {
-    QString sql = "SELECT id, name, severity, severityOp, facility, facilityOp, hostname, hostnameOp, appname, appnameOp, procid, procidOp, msgid, msgidOp, message, messageOp, threshold, timeWindow, threshOp, perHost FROM rules";
+    QString sql = "SELECT id, name, severity, severityOp, facility, facilityOp, hostname, hostnameOp, appname, appnameOp, procid, procidOp, msgid, msgidOp, message, messageOp, threshold, timeWindow, threshOp, perHost, enabled FROM rules";
     QSqlQuery query(db);
 
     if (!query.exec(sql)) {
@@ -306,6 +307,7 @@ QList<std::shared_ptr<Rule>> DatabaseManager::loadRules()
         rule->timeWindow = QTime::fromString(query.value(17).toString());
         rule->triggerCondition = static_cast<ComparisonOperator>(query.value(18).toInt());
         rule->perHost = query.value(19).toBool();
+        rule->enabled = query.value(20).toBool();
 
         rules << rule;
     }
@@ -314,51 +316,96 @@ QList<std::shared_ptr<Rule>> DatabaseManager::loadRules()
 }
 
 
-void DatabaseManager::addRule(Rule& rule)
+void DatabaseManager::saveRule(std::shared_ptr<Rule> rule)
 {
     QSqlQuery query;
-    query.prepare(R"(
-        INSERT INTO rules (name, severity, severityOp, facility, facilityOp, hostname, hostnameOp, appname, appnameOp, procid, procidOp, msgid, msgidOp, message, messageOp, threshold, timeWindow, threshOp, perHost)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    )");
 
-    query.addBindValue(rule.name);
-    query.addBindValue(rule.severity);
-    query.addBindValue(static_cast<int>(rule.severityOp));
-    query.addBindValue(rule.facility);
-    query.addBindValue(static_cast<int>(rule.facilityOp));
-    query.addBindValue(rule.hostnameValue);
-    query.addBindValue(static_cast<int>(rule.hostnameOp));
-    query.addBindValue(rule.appnameValue);
-    query.addBindValue(static_cast<int>(rule.appnameOp));
-    query.addBindValue(rule.procIDValue);
-    query.addBindValue(static_cast<int>(rule.procIDOp));
-    query.addBindValue(rule.msgIDValue);
-    query.addBindValue(static_cast<int>(rule.msgIDOp));
-    query.addBindValue(rule.messageValue);
-    query.addBindValue(static_cast<int>(rule.messageOp));
-    query.addBindValue(rule.thresholdCount);
-    query.addBindValue(rule.timeWindow);
-    query.addBindValue(static_cast<int>(rule.triggerCondition));
-    query.addBindValue(rule.perHost);
+    if (rule->id > 0) { // Updating an existing rule
+        qDebug() << "Updating existing rule";
+        query.prepare(R"(
+            UPDATE rules SET
+            name = :name,
+            severity = :severity, severityOp = :severityOp,
+            facility = :facility, facilityOp = :facilityOp,
+            hostname = :hostname, hostnameOp = :hostnameOp,
+            appname = :appname, appnameOp = :appnameOp,
+            procid = :procid, procidOp = :procidOp,
+            msgid = :msgid, msgidOp = :msgidOp,
+            message = :message, messageOp = :messageOp,
+            threshold = :threshold, timeWindow = :timeWindow, threshOp = :threshOp,
+            perHost = :perHost,
+            enabled = :enabled
+            WHERE id = :id
+        )");
+        query.bindValue(":id", rule->id);
+    } else { // Creating a new rule
+        query.prepare(R"(
+            INSERT INTO rules (
+                name,
+                severity, severityOp,
+                facility, facilityOp,
+                hostname, hostnameOp,
+                appname, appnameOp,
+                procid, procidOp,
+                msgid, msgidOp,
+                message, messageOp,
+                threshold, timeWindow, threshOp,
+                perHost, enabled
+            ) VALUES (
+                :name,
+                :severity, :severityOp,
+                :facility, :facilityOp,
+                :hostname, :hostnameOp,
+                :appname, :appnameOp,
+                :procid, :procidOp,
+                :msgid, :msgidOp,
+                :message, :messageOp,
+                :threshold, :timeWindow, :threshOp,
+                :perHost, :enabled
+            )
+        )");
+    }
+
+    query.bindValue(":name", rule->name);
+    query.bindValue(":severity", rule->severity);
+    query.bindValue(":severityOp", static_cast<int>(rule->severityOp));
+    query.bindValue(":facility", rule->facility);
+    query.bindValue(":facilityOp", static_cast<int>(rule->facilityOp));
+    query.bindValue(":hostname", rule->hostnameValue);
+    query.bindValue(":hostnameOp", static_cast<int>(rule->hostnameOp));
+    query.bindValue(":appname", rule->appnameValue);
+    query.bindValue(":appnameOp", static_cast<int>(rule->appnameOp));
+    query.bindValue(":procid", rule->procIDValue);
+    query.bindValue(":procidOp", static_cast<int>(rule->procIDOp));
+    query.bindValue(":msgid", rule->msgIDValue);
+    query.bindValue(":msgIDOp", static_cast<int>(rule->msgIDOp));
+    query.bindValue(":message", rule->messageValue);
+    query.bindValue(":messageOp", static_cast<int>(rule->messageOp));
+    query.bindValue(":threshold", rule->thresholdCount);
+    query.bindValue(":timeWindow", rule->timeWindow);
+    query.bindValue(":threshOp", static_cast<int>(rule->triggerCondition));
+    query.bindValue(":perHost", rule->perHost);
+    query.bindValue(":enabled", rule->enabled);
 
     if (!query.exec()) {
-        qDebug() << "Insert failed: " << query.lastError().text();
-    } else {
+        qDebug() << ((rule->id > 0) ? "Update failed: " : "Insert failed: ") << query.lastError().text();
+    } else if (rule->id <= 0) { // Assign id to new rule
         QVariant lastId = query.lastInsertId();
         if (!lastId.isValid()) {
             qDebug() << "Could not retrieve last insert ID.";
             return;
         }
         int id = lastId.toInt();
-        rule.id = id;
+        rule->id = id;
     }
+
+    emit ruleSaved(rule);
 }
 
 
 QList<QStringList> DatabaseManager::queryRules()
 {
-    QString sql = "SELECT name, severity, severityOp, facility, facilityOp, hostname, hostnameOp, appname, appnameOp, procid, procidOp, msgid, msgidOp, message, messageOp, threshold, timeWindow, threshOp, perHost, id FROM rules";
+    QString sql = "SELECT name, severity, severityOp, facility, facilityOp, hostname, hostnameOp, appname, appnameOp, procid, procidOp, msgid, msgidOp, message, messageOp, threshold, timeWindow, threshOp, perHost, enabled, id FROM rules";
     QSqlQuery query(db);
 
     if (!query.exec(sql)) {
@@ -368,7 +415,6 @@ QList<QStringList> DatabaseManager::queryRules()
 
     QList<QStringList> rows;
     while (query.next()) rows << getRuleRow(query);
-    qDebug() << rows.count();
     return rows;
 }
 
@@ -413,12 +459,22 @@ QStringList DatabaseManager::getRuleRow(const QSqlQuery& query)
         row << "-";
     }
 
-    if (query.value(18).toInt() == 0) { // Per-Host bool
-        row << "False";
-    } else {
-        row << "True";
-    }
+    row << (query.value(18).toBool() ? "True" : "False"); // perHost
+    row << (query.value(19).toBool() ? "1" : "0");        // enabled
 
-    row << query.value(19).toString(); // database id
+    row << query.value(20).toString(); // database id
     return row;
+}
+
+void DatabaseManager::deleteRule(std::shared_ptr<Rule> rule)
+{
+    qDebug() << "Deleting rule " << rule->name;
+    QSqlQuery query;
+    query.prepare("DELETE FROM rules WHERE id = :id");
+    query.bindValue(":id", rule->id);
+    if (!query.exec()) {
+        qWarning() << "Failed to delete rule: " << rule->name << " - " << query.lastError().text();
+        return;
+    }
+    emit ruleDeleted(rule);
 }

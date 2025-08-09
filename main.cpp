@@ -17,10 +17,10 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
 
     DatabaseManager::instance(); // has to be first since others will call on it
+    SyslogReceiver receiver; // Needs to be before MainWindow because TestWindow will send logs to socket created by this class
+    LogParser parser; // See above
     MainWindow window; // has to be before RuleManager because this will create TestWindow which populates db will filler if empty
-    SyslogReceiver receiver;
     RuleManager ruleManager;
-    LogParser parser;
 
     window.passRulesManager(ruleManager);
 

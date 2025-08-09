@@ -1,5 +1,8 @@
+#include <QMessageBox>
+
 #include "new_rule_dialog.h"
 #include "ui_new_rule_dialog.h"
+#include "database_manager.h"
 
 NewRuleDialog::NewRuleDialog(QWidget *parent)
     : QDialog(parent)
@@ -13,9 +16,11 @@ NewRuleDialog::NewRuleDialog(QWidget *parent)
     QIntValidator *facValidator = new QIntValidator(0, 23, this);
     ui->facilityLineEdit->setValidator(facValidator);
 
-    connect(this, &QDialog::accepted, this, &NewRuleDialog::parseNewRule);
+    QIntValidator *threshValidator = new QIntValidator(0, INT_MAX, this);
+    ui->limitLineEdit->setValidator(threshValidator);
 
-    qDebug() << "TODO: Pass off new Rule values and edited rule values!";
+    connect(this, &QDialog::accepted, this, &NewRuleDialog::parseNewRule);
+    connect(ui->deleteRuleButton, &QPushButton::clicked, this, &NewRuleDialog::deleteRule);
 }
 
 NewRuleDialog::~NewRuleDialog()
@@ -46,6 +51,7 @@ void NewRuleDialog::reset()
     ui->limitTimeEdit->setTime(QTime());
     ui->perHostCheckBox->setChecked(false);
     ui->ruleEnabledCheckBox->setChecked(true);
+    ui->deleteRuleButton->setEnabled(false);
 }
 
 // TODO: Maybe check periodically and disable/enable Confirm button?
@@ -74,66 +80,70 @@ bool NewRuleDialog::ruleIsValid()
 
 void NewRuleDialog::parseNewRule()
 {
-    if (!ruleIsValid()) return;
+    if (!ruleIsValid()) {
+        // TODO: Don't let the user hit 'accept' when invalid
+        ruleToEdit = nullptr;
+        return;
+    }
 
-    auto newRule = std::make_shared<Rule>();
+    std::shared_ptr<Rule> rule = ruleToEdit ? ruleToEdit : std::make_shared<Rule>();
 
-    newRule->name = ui->nameLineEdit->text();
-    newRule->enabled = ui->ruleEnabledCheckBox->isChecked();
-    newRule->perHost = ui->perHostCheckBox->isChecked();
+    rule->name = ui->nameLineEdit->text();
+    rule->enabled = ui->ruleEnabledCheckBox->isChecked();
+    rule->perHost = ui->perHostCheckBox->isChecked();
 
     if (!ui->severityLineEdit->text().isEmpty()) {
-        newRule->severity = ui->severityLineEdit->text().toInt();
-        newRule->severityOp = static_cast<ComparisonOperator>(ui->severityComboBox->currentIndex());
+        rule->severity = ui->severityLineEdit->text().toInt();
+        rule->severityOp = static_cast<ComparisonOperator>(ui->severityComboBox->currentIndex());
     }
 
     if (!ui->facilityLineEdit->text().isEmpty()) {
-        newRule->facility = ui->facilityLineEdit->text().toInt();
-        newRule->facilityOp = static_cast<ComparisonOperator>(ui->facilityComboBox->currentIndex());
+        rule->facility = ui->facilityLineEdit->text().toInt();
+        rule->facilityOp = static_cast<ComparisonOperator>(ui->facilityComboBox->currentIndex());
     }
 
     if (!ui->hostnameLineEdit->text().isEmpty()) {
-        newRule->hostnameValue = ui->hostnameLineEdit->text();
-        newRule->hostnameOp = static_cast<StringComparison>(ui->hostnameComboBox->currentIndex());
+        rule->hostnameValue = ui->hostnameLineEdit->text();
+        rule->hostnameOp = static_cast<StringComparison>(ui->hostnameComboBox->currentIndex());
     }
 
     if (!ui->appnameLineEdit->text().isEmpty()) {
-        newRule->appnameValue = ui->appnameLineEdit->text();
-        newRule->appnameOp = static_cast<StringComparison>(ui->appnameComboBox->currentIndex());
+        rule->appnameValue = ui->appnameLineEdit->text();
+        rule->appnameOp = static_cast<StringComparison>(ui->appnameComboBox->currentIndex());
     }
 
     if (!ui->procidLineEdit->text().isEmpty()) {
-        newRule->procIDValue = ui->procidLineEdit->text();
-        newRule->procIDOp = static_cast<StringComparison>(ui->procidComboBox->currentIndex());
+        rule->procIDValue = ui->procidLineEdit->text();
+        rule->procIDOp = static_cast<StringComparison>(ui->procidComboBox->currentIndex());
     }
 
     if (!ui->msgidLineEdit->text().isEmpty()) {
-        newRule->msgIDValue = ui->msgidLineEdit->text();
-        newRule->msgIDOp = static_cast<StringComparison>(ui->msgidComboBox->currentIndex());
+        rule->msgIDValue = ui->msgidLineEdit->text();
+        rule->msgIDOp = static_cast<StringComparison>(ui->msgidComboBox->currentIndex());
     }
 
     if (!ui->msgLineEdit->text().isEmpty()) {
-        newRule->messageValue = ui->msgLineEdit->text();
-        newRule->messageOp = static_cast<StringComparison>(ui->msgComboBox->currentIndex());
+        rule->messageValue = ui->msgLineEdit->text();
+        rule->messageOp = static_cast<StringComparison>(ui->msgComboBox->currentIndex());
     }
 
     if (!ui->limitLineEdit->text().isEmpty()) {
-        newRule->thresholdCount = ui->limitLineEdit->text().toInt();
-        newRule->timeWindow = ui->limitTimeEdit->time();
+        rule->thresholdCount = ui->limitLineEdit->text().toInt();
+        rule->timeWindow = ui->limitTimeEdit->time();
         // Plus 2 because == and != aren't valid nor included
-        newRule->triggerCondition = static_cast<ComparisonOperator>(ui->limitComboBox->currentIndex() + 2);
+        rule->triggerCondition = static_cast<ComparisonOperator>(ui->limitComboBox->currentIndex() + 2);
     }
 
-    qWarning() << "Need to pass off this new rule somehow";
-    // DatabaseManager is a singleton, could pass it through there?
-    // Then DB can emit a signal
-    // RulesManager will listen for signal to add/edit rule
-    // RulesPage can listen for signal to refresh table
+    DatabaseManager::instance().saveRule(rule);
+    ruleToEdit = nullptr; // Clear saved value for next time this is opened
 }
 
 void NewRuleDialog::setRuleToEdit(std::shared_ptr<Rule> rule)
 {
-    qDebug() << "Editing rule: " << rule->name;
+    //qDebug() << "Editing rule: " << rule->name;
+
+    ruleToEdit = rule;
+    ui->deleteRuleButton->setEnabled(true);
 
     ui->nameLineEdit->setText(rule->name);
     ui->ruleEnabledCheckBox->setChecked(rule->enabled);
@@ -162,4 +172,15 @@ void NewRuleDialog::setRuleToEdit(std::shared_ptr<Rule> rule)
     ui->msgLineEdit->setText(rule->messageValue);
 }
 
+
+void NewRuleDialog::deleteRule()
+{
+    if (!ruleToEdit) return; // shouldn't happen?
+
+    QMessageBox::StandardButton reply;
+    if (QMessageBox::question(this, "Confirm Delete", "Are you sure?", QMessageBox::Yes|QMessageBox::No) == QMessageBox::Yes) {
+        DatabaseManager::instance().deleteRule(ruleToEdit);
+        close();
+    }
+}
 

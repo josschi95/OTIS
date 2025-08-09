@@ -16,30 +16,21 @@ void RulesPage::initialize()
     if (initialized) return;
     initialized = true;
 
+    newRuleDialog = new NewRuleDialog(this);
     rulesTable = this->findChild<QTableWidget*>("rulesTable");
 
     QPushButton* newRuleButton = this->findChild<QPushButton*>("newRuleButton");
-    if (newRuleButton) {
-        connect(newRuleButton, &QPushButton::clicked, this, &RulesPage::openNewRuleDialog);
-    } else {
-        qWarning() << "filtersButton not found";
-    }
+    connect(newRuleButton, &QPushButton::clicked, this, &RulesPage::openNewRuleDialog);
 
     editRuleButton = this->findChild<QPushButton*>("editRuleButton");
     connect(editRuleButton, &QPushButton::clicked, this, &RulesPage::openEditRuleDialog);
-
     connect(rulesTable->selectionModel(), &QItemSelectionModel::selectionChanged, this, [&]() {
         editRuleButton->setEnabled(rulesTable->selectionModel()->hasSelection());
     });
+    editRuleButton->setEnabled(false);
 
-    newRuleDialog = new NewRuleDialog(this);
-    // I will probably need to have a custom signal in NewRuleDialog so I don't have a race condition between refreshing and submitting rule
-    connect(newRuleDialog, &QDialog::finished, this, [=](int result) {
-        if (result == QDialog::Accepted) {
-            refreshRulesTable();
-        }
-        newRuleDialog->reset();
-    });
+    connect(&DatabaseManager::instance(), &DatabaseManager::ruleSaved, this, &RulesPage::refreshRulesTable);
+    connect(&DatabaseManager::instance(), &DatabaseManager::ruleDeleted, this, &RulesPage::refreshRulesTable);
 
     refreshRulesTable();
 }
@@ -50,10 +41,16 @@ void RulesPage::addRow(const QStringList &row)
     rulesTable->insertRow(newRow);
 
     int id = row.last().toInt(); // id is added to end of list
-    for (int c = 0; c < row.size()-1; ++c) {
+    bool enabled = (row[row.size() - 2].toInt() != 0); // enabled is second to last
+
+    for (int c = 0; c < row.size() - 2; ++c) {
         rulesTable->setItem(newRow, c, new QTableWidgetItem(row[c]));
+
         // Need reference to rule id for when selecting a row to edit the rule
-        if (c == 0) rulesTable->itemAt(newRow, c)->setData(Qt::UserRole, id);
+        if (c == 0) rulesTable->item(newRow, c)->setData(Qt::UserRole, id);
+
+        // Can't use ItemIsEnabled (gives same appearance) because then it's not selectable
+        if (!enabled) rulesTable->item(newRow, c)->setForeground(QBrush(Qt::gray));
     }
 }
 
@@ -83,7 +80,7 @@ void RulesPage::refreshRulesTable()
 
 void RulesPage::openEditRuleDialog()
 {
-    QTableWidgetItem* item = rulesTable->item(rulesTable->currentRow(), 0);
+    QTableWidgetItem *item = rulesTable->item(rulesTable->currentRow(), 0);
     int id = item->data(Qt::UserRole).value<int>();
     auto rule = ruleManager->getRuleById(id);
     if (rule != nullptr) {

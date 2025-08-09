@@ -24,6 +24,8 @@ signals:
 
 private slots:
     void update();
+    void updateRule(std::shared_ptr<Rule> rule);
+    void ruleDeleted(std::shared_ptr<Rule> rule);
 
 private:
     QList<std::shared_ptr<Rule>> rules;

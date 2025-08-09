@@ -17,13 +17,16 @@ public:
     QList<QStringList> queryLogs(const LogFilters& filters);
     QList<std::shared_ptr<Rule>> loadRules();
     QList<QStringList> queryRules();
-    void addRule(Rule& rule);
+    void saveRule(std::shared_ptr<Rule> rule);
+    void deleteRule(std::shared_ptr<Rule> rule);
     int logCount();
     int ruleCount();
 
 signals:
     void databaseUpdated();
     void logInserted(const QStringList& row);
+    void ruleSaved(std::shared_ptr<Rule>);
+    void ruleDeleted(std::shared_ptr<Rule>);
 
 private:
     explicit DatabaseManager(QObject *parent = nullptr) : QObject(parent) {}

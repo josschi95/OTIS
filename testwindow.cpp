@@ -36,23 +36,23 @@ TestWindow::TestWindow(QWidget *parent)
 
     if (DatabaseManager::instance().ruleCount() == 0) { // TESTING
 
-        auto failedLoginsRule = Rule();
-        failedLoginsRule.name = "Multiple Failed Logins";
-        failedLoginsRule.msgIDValue = "LOGIN_FAILURE";
-        failedLoginsRule.msgIDOp = StringComparison::ExactMatch;
-        failedLoginsRule.perHost = true;
-        failedLoginsRule.thresholdCount = 3;
-        failedLoginsRule.timeWindow = QTime().fromString("00:01:00");
-        failedLoginsRule.triggerCondition = ComparisonOperator::gte;
+        auto failedLoginsRule = std::make_shared<Rule>();
+        failedLoginsRule->name = "Multiple Failed Logins";
+        failedLoginsRule->msgIDValue = "LOGIN_FAILURE";
+        failedLoginsRule->msgIDOp = StringComparison::ExactMatch;
+        failedLoginsRule->perHost = true;
+        failedLoginsRule->thresholdCount = 3;
+        failedLoginsRule->timeWindow = QTime().fromString("00:01:00");
+        failedLoginsRule->triggerCondition = ComparisonOperator::gte;
 
-        auto noLogRule = Rule();
-        noLogRule.name = "No Incoming Logs";
-        noLogRule.thresholdCount = 1;
-        noLogRule.timeWindow = QTime().fromString("00:01:00");
-        noLogRule.triggerCondition = ComparisonOperator::lt;
+        auto noLogRule = std::make_shared<Rule>();
+        noLogRule->name = "No Incoming Logs";
+        noLogRule->thresholdCount = 1;
+        noLogRule->timeWindow = QTime().fromString("00:01:00");
+        noLogRule->triggerCondition = ComparisonOperator::lt;
 
-        DatabaseManager::instance().addRule(failedLoginsRule);
-        DatabaseManager::instance().addRule(noLogRule);
+        DatabaseManager::instance().saveRule(failedLoginsRule);
+        DatabaseManager::instance().saveRule(noLogRule);
     }
 }
 

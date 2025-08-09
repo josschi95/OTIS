@@ -10,6 +10,9 @@ RuleManager::RuleManager(QObject *parent) : QObject(parent)
     auto rules = DatabaseManager::instance().loadRules();
     for (const auto& rule : rules) addRule(rule);
 
+    connect(&DatabaseManager::instance(), &DatabaseManager::ruleSaved, this, &RuleManager::updateRule);
+    connect(&DatabaseManager::instance(), &DatabaseManager::ruleDeleted, this, &RuleManager::updateRule);
+
     // Start Update loop
     updateTimer = new QTimer(this);
     updateTimer->setInterval(5 * 1000); // 5 seconds
@@ -48,10 +51,39 @@ void RuleManager::update()
     updateTimer->start();
 }
 
+
+// DatabaseManager added new rule or changed existing one
+void RuleManager::updateRule(std::shared_ptr<Rule> rule)
+{
+    // It's easier to just remove and re-add updated rule
+    // addRule will handle changes that might affect RuleGroup and tracked timestamps
+    ruleDeleted(rule);
+    addRule(rule);
+}
+
+
+void RuleManager::ruleDeleted(std::shared_ptr<Rule> rule)
+{
+    auto index = rules.indexOf(rule);
+    if (index >= 0) { // returns -1 if not in list
+        //qDebug() << "(RuleManager) updated rule: " << rule->name;
+        rules.removeAt(index);
+
+        for (int i = 0; i < ruleGroups.size(); ++i) {
+            if (ruleGroups[i].rule == rule) {
+                ruleGroups.removeAt(i);
+                break;
+            }
+        }
+    }
+}
+
+
 QList<std::shared_ptr<Rule>> RuleManager::getRules() const
 {
     return rules;
 }
+
 
 std::shared_ptr<Rule> RuleManager::getRuleById(int id) const
 {
@@ -61,10 +93,11 @@ std::shared_ptr<Rule> RuleManager::getRuleById(int id) const
     return NULL;
 }
 
+
 bool RuleManager::addRule(std::shared_ptr<Rule> rule)
 {
     if (!rule) return false;
-    qDebug() << "Adding rule: " << rule->name;
+    //qDebug() << "Adding rule: " << rule->name;
     //TODO: Check that rule is valid
 
     rules << rule;
@@ -78,6 +111,7 @@ bool RuleManager::addRule(std::shared_ptr<Rule> rule)
 
     return true;
 }
+
 
 void RuleManager::checkRules(const LogEntry& log)
 {
@@ -115,6 +149,7 @@ void RuleManager::checkRules(const LogEntry& log)
         }
     }
 }
+
 
 void RuleManager::clearOldTimestamps(QList<QDateTime>& timestamps, const QDateTime& now, int windowMs)
 {
