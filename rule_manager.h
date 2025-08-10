@@ -17,10 +17,7 @@ public:
     void deleteRule(const Rule& rule);
     QList<std::shared_ptr<Rule>> getRules() const;
     std::shared_ptr<Rule> getRuleById(int id) const;
-    void checkRules(const LogEntry& log);
-
-signals:
-    void ruleViolated(std::shared_ptr<Rule> violdatedRule);
+    void checkRules(const LogEntry& log);    
 
 private slots:
     void update();
@@ -31,5 +28,6 @@ private:
     QList<std::shared_ptr<Rule>> rules;
     QList<RuleGroup> ruleGroups;
     QTimer *updateTimer;
+    void ruleViolated(std::shared_ptr<Rule> rule,  QString source);
     void clearOldTimestamps(QList<QDateTime>& list, const QDateTime& now, int windowMs);
 };

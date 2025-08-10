@@ -6,11 +6,9 @@
 #include "database_manager.h"
 
 
-LogsPage::LogsPage(QWidget *parent)
-    : QWidget(parent)
-{
-    //NOTE: parent and children are apparently still null here
-}
+//NOTE: parent and children are apparently still null here
+LogsPage::LogsPage(QWidget *parent) : QWidget(parent) {}
+
 
 void LogsPage::initialize()
 {
@@ -40,12 +38,14 @@ void LogsPage::initialize()
     refreshLogTable();
 }
 
+
 void LogsPage::openFiltersDialog()
 {
     filtersDialog->show();
     filtersDialog->raise();
     filtersDialog->activateWindow();
 }
+
 
 void LogsPage::addRow(const QStringList& row)
 {
@@ -57,6 +57,7 @@ void LogsPage::addRow(const QStringList& row)
         logTable->setItem(newRow, c, new QTableWidgetItem(row[c]));
     }
 }
+
 
 void LogsPage::refreshLogTable()
 {

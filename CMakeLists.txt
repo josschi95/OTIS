@@ -17,13 +17,19 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
-        logs_page.h
-        logs_page.cpp
+        alerts_page.h
+        alerts_page.cpp
         rules_page.h
         rules_page.cpp
+        logs_page.h
+        logs_page.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+    find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
+
     qt_add_executable(OTIS
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
@@ -67,6 +73,11 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         test_rules.json
         test_logs.txt
         TODO.txt
+
+        alert_manager.h alert_manager.cpp
+        alerts_page.h alerts_page.cpp
+
+
     )
 
 # Define target properties for Android with Qt 6 as:
@@ -93,6 +104,9 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test_logs.txt ${CMAKE_CURRENT_BINARY_
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test_rules.json ${CMAKE_CURRENT_BINARY_DIR}/test_rules.json COPYONLY)
 
 target_link_libraries(OTIS PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt6::Network Qt6::Sql)
+target_link_libraries(OTIS PRIVATE Qt6::Core)
+target_link_libraries(OTIS PRIVATE Qt6::Core Qt6::Widgets)
+target_link_libraries(OTIS PRIVATE Qt6::Core Qt6::Widgets)
 
 # Should fix issue with promoted widgets
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

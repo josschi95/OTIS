@@ -170,7 +170,7 @@
 }</string>
               </property>
               <property name="text">
-               <string>Devices</string>
+               <string>Alerts</string>
               </property>
               <property name="flat">
                <bool>true</bool>
@@ -270,10 +270,127 @@
           </sizepolicy>
          </property>
          <property name="currentIndex">
-          <number>2</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="page0_overview"/>
-         <widget class="QWidget" name="page1_devices"/>
+         <widget class="AlertsPage" name="page1_alerts">
+          <layout class="QVBoxLayout" name="verticalLayout_9">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QFrame" name="alertsFrame">
+             <property name="frameShape">
+              <enum>QFrame::Shape::NoFrame</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Plain</enum>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_8">
+              <property name="leftMargin">
+               <number>9</number>
+              </property>
+              <item>
+               <layout class="QHBoxLayout" name="alertsBar">
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="QPushButton" name="ackButton">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>26</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>86</width>
+                    <height>26</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Acknowlege</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer_3">
+                  <property name="orientation">
+                   <enum>Qt::Orientation::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <widget class="QTableWidget" name="alertsTable">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="verticalScrollBarPolicy">
+                 <enum>Qt::ScrollBarPolicy::ScrollBarAsNeeded</enum>
+                </property>
+                <property name="sortingEnabled">
+                 <bool>true</bool>
+                </property>
+                <attribute name="horizontalHeaderCascadingSectionResizes">
+                 <bool>false</bool>
+                </attribute>
+                <attribute name="horizontalHeaderDefaultSectionSize">
+                 <number>150</number>
+                </attribute>
+                <attribute name="horizontalHeaderStretchLastSection">
+                 <bool>true</bool>
+                </attribute>
+                <column>
+                 <property name="text">
+                  <string>Severity</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>Timestamp</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>Rule</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>Source</string>
+                 </property>
+                </column>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </widget>
          <widget class="RulesPage" name="page2_rules">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -388,7 +505,12 @@
                 </column>
                 <column>
                  <property name="text">
-                  <string>Severity</string>
+                  <string>Alert Severity</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>Log Severity</string>
                  </property>
                 </column>
                 <column>
@@ -578,6 +700,12 @@
    <class>RulesPage</class>
    <extends>QWidget</extends>
    <header>rules_page.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>AlertsPage</class>
+   <extends>QWidget</extends>
+   <header>alerts_page.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -20,16 +20,21 @@ NewRuleDialog::NewRuleDialog(QWidget *parent)
     ui->limitLineEdit->setValidator(threshValidator);
 
     connect(this, &QDialog::accepted, this, &NewRuleDialog::parseNewRule);
+    connect(this, &QDialog::rejected, this, &NewRuleDialog::reset);
+
     connect(ui->deleteRuleButton, &QPushButton::clicked, this, &NewRuleDialog::deleteRule);
 }
+
 
 NewRuleDialog::~NewRuleDialog()
 {
     delete ui;
 }
 
+
 void NewRuleDialog::reset()
 {
+    ui->alertSeverityComboBox->setCurrentIndex(0);
     ui->severityComboBox->setCurrentIndex(0);
     ui->facilityComboBox->setCurrentIndex(0);
     ui->hostnameComboBox->setCurrentIndex(0);
@@ -53,6 +58,7 @@ void NewRuleDialog::reset()
     ui->ruleEnabledCheckBox->setChecked(true);
     ui->deleteRuleButton->setEnabled(false);
 }
+
 
 // TODO: Maybe check periodically and disable/enable Confirm button?
 bool NewRuleDialog::ruleIsValid()
@@ -78,6 +84,7 @@ bool NewRuleDialog::ruleIsValid()
     return false;
 }
 
+
 void NewRuleDialog::parseNewRule()
 {
     if (!ruleIsValid()) {
@@ -89,6 +96,7 @@ void NewRuleDialog::parseNewRule()
     std::shared_ptr<Rule> rule = ruleToEdit ? ruleToEdit : std::make_shared<Rule>();
 
     rule->name = ui->nameLineEdit->text();
+    rule->alertSeverity = static_cast<Severity>(ui->alertSeverityComboBox->currentIndex());
     rule->enabled = ui->ruleEnabledCheckBox->isChecked();
     rule->perHost = ui->perHostCheckBox->isChecked();
 
@@ -103,27 +111,27 @@ void NewRuleDialog::parseNewRule()
     }
 
     if (!ui->hostnameLineEdit->text().isEmpty()) {
-        rule->hostnameValue = ui->hostnameLineEdit->text();
+        rule->hostname = ui->hostnameLineEdit->text();
         rule->hostnameOp = static_cast<StringComparison>(ui->hostnameComboBox->currentIndex());
     }
 
     if (!ui->appnameLineEdit->text().isEmpty()) {
-        rule->appnameValue = ui->appnameLineEdit->text();
+        rule->appname = ui->appnameLineEdit->text();
         rule->appnameOp = static_cast<StringComparison>(ui->appnameComboBox->currentIndex());
     }
 
     if (!ui->procidLineEdit->text().isEmpty()) {
-        rule->procIDValue = ui->procidLineEdit->text();
-        rule->procIDOp = static_cast<StringComparison>(ui->procidComboBox->currentIndex());
+        rule->procid = ui->procidLineEdit->text();
+        rule->procidOp = static_cast<StringComparison>(ui->procidComboBox->currentIndex());
     }
 
     if (!ui->msgidLineEdit->text().isEmpty()) {
-        rule->msgIDValue = ui->msgidLineEdit->text();
-        rule->msgIDOp = static_cast<StringComparison>(ui->msgidComboBox->currentIndex());
+        rule->msgid = ui->msgidLineEdit->text();
+        rule->msgidOp = static_cast<StringComparison>(ui->msgidComboBox->currentIndex());
     }
 
     if (!ui->msgLineEdit->text().isEmpty()) {
-        rule->messageValue = ui->msgLineEdit->text();
+        rule->message = ui->msgLineEdit->text();
         rule->messageOp = static_cast<StringComparison>(ui->msgComboBox->currentIndex());
     }
 
@@ -136,7 +144,9 @@ void NewRuleDialog::parseNewRule()
 
     DatabaseManager::instance().saveRule(rule);
     ruleToEdit = nullptr; // Clear saved value for next time this is opened
+    reset();
 }
+
 
 void NewRuleDialog::setRuleToEdit(std::shared_ptr<Rule> rule)
 {
@@ -149,12 +159,13 @@ void NewRuleDialog::setRuleToEdit(std::shared_ptr<Rule> rule)
     ui->ruleEnabledCheckBox->setChecked(rule->enabled);
     ui->perHostCheckBox->setChecked(rule->perHost);
 
+    ui->alertSeverityComboBox->setCurrentIndex(static_cast<int>(rule->alertSeverity));
     ui->severityComboBox->setCurrentIndex(static_cast<int>(rule->severityOp));
     ui->facilityComboBox->setCurrentIndex(static_cast<int>(rule->facilityOp));
     ui->hostnameComboBox->setCurrentIndex(static_cast<int>(rule->hostnameOp));
     ui->appnameComboBox->setCurrentIndex(static_cast<int>(rule->appnameOp));
-    ui->procidComboBox->setCurrentIndex(static_cast<int>(rule->procIDOp));
-    ui->msgidComboBox->setCurrentIndex(static_cast<int>(rule->msgIDOp));
+    ui->procidComboBox->setCurrentIndex(static_cast<int>(rule->procidOp));
+    ui->msgidComboBox->setCurrentIndex(static_cast<int>(rule->msgidOp));
     ui->msgComboBox->setCurrentIndex(static_cast<int>(rule->messageOp));
     // Minus 2 because == and != aren't valid/included
     ui->limitComboBox->setCurrentIndex(static_cast<int>(rule->triggerCondition) - 2);
@@ -165,11 +176,11 @@ void NewRuleDialog::setRuleToEdit(std::shared_ptr<Rule> rule)
 
     ui->limitTimeEdit->setTime(rule->timeWindow);
 
-    ui->hostnameLineEdit->setText(rule->hostnameValue);
-    ui->appnameLineEdit->setText(rule->appnameValue);
-    ui->procidLineEdit->setText(rule->procIDValue);
-    ui->msgidLineEdit->setText(rule->msgIDValue);
-    ui->msgLineEdit->setText(rule->messageValue);
+    ui->hostnameLineEdit->setText(rule->hostname);
+    ui->appnameLineEdit->setText(rule->appname);
+    ui->procidLineEdit->setText(rule->procid);
+    ui->msgidLineEdit->setText(rule->msgid);
+    ui->msgLineEdit->setText(rule->message);
 }
 
 
@@ -180,6 +191,7 @@ void NewRuleDialog::deleteRule()
     QMessageBox::StandardButton reply;
     if (QMessageBox::question(this, "Confirm Delete", "Are you sure?", QMessageBox::Yes|QMessageBox::No) == QMessageBox::Yes) {
         DatabaseManager::instance().deleteRule(ruleToEdit);
+        reset();
         close();
     }
 }

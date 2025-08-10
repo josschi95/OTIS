@@ -26,29 +26,3 @@ enum class StringComparison {
     StartsWith, // QString.startsWith
     // Regex?
 };
-
-
-
-/*const QMap<ComparisonOperator, QString>& compOperatorToStringMap() {
-    static const QMap<ComparisonOperator, QString> map = {
-        { ComparisonOperator::eq, "==" },
-        { ComparisonOperator::ne, "!=" },
-        { ComparisonOperator::lt, "<" },
-        { ComparisonOperator::lte, "<=" },
-        { ComparisonOperator::gt, ">" },
-        { ComparisonOperator::gte, ">=" },
-    };
-    return map;
-}
-
-const QMap<QString, ComparisonOperator>& stringToCompOperatorMap() {
-    static const QMap<QString, ComparisonOperator> map = {
-        { "==", ComparisonOperator::eq  },
-        { "!=", ComparisonOperator::ne  },
-        { "<" , ComparisonOperator::lt  },
-        { "<=", ComparisonOperator::lte },
-        { ">" , ComparisonOperator::gt  },
-        { ">=", ComparisonOperator::gte },
-    };
-    return map;
-}*/

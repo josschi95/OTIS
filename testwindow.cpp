@@ -1,5 +1,6 @@
 #include <QUdpSocket>
 #include <QDateTime>
+#include <QTimer>
 #include <QFile>
 
 #include "testwindow.h"
@@ -12,6 +13,9 @@ TestWindow::TestWindow(QWidget *parent)
     , ui(new Ui::TestWindow)
 {
     ui->setupUi(this);
+
+    logTimer = new QTimer(this);
+    connect(logTimer, &QTimer::timeout, this, &TestWindow::onTimerTrigger);
 
     if (DatabaseManager::instance().logCount() == 0) { // TESTING
         // Submit some filler logs if the db is empty
@@ -38,8 +42,9 @@ TestWindow::TestWindow(QWidget *parent)
 
         auto failedLoginsRule = std::make_shared<Rule>();
         failedLoginsRule->name = "Multiple Failed Logins";
-        failedLoginsRule->msgIDValue = "LOGIN_FAILURE";
-        failedLoginsRule->msgIDOp = StringComparison::ExactMatch;
+        failedLoginsRule->alertSeverity = Severity::Warning;
+        failedLoginsRule->msgid = "LOGIN_FAILURE";
+        failedLoginsRule->msgidOp = StringComparison::ExactMatch;
         failedLoginsRule->perHost = true;
         failedLoginsRule->thresholdCount = 3;
         failedLoginsRule->timeWindow = QTime().fromString("00:01:00");
@@ -47,6 +52,7 @@ TestWindow::TestWindow(QWidget *parent)
 
         auto noLogRule = std::make_shared<Rule>();
         noLogRule->name = "No Incoming Logs";
+        noLogRule->alertSeverity = Severity::Error;
         noLogRule->thresholdCount = 1;
         noLogRule->timeWindow = QTime().fromString("00:01:00");
         noLogRule->triggerCondition = ComparisonOperator::lt;
@@ -54,12 +60,25 @@ TestWindow::TestWindow(QWidget *parent)
         DatabaseManager::instance().saveRule(failedLoginsRule);
         DatabaseManager::instance().saveRule(noLogRule);
     }
+
+    //QDateTime& ts, Severity se, const QString& so, const QString& rn
+    if (DatabaseManager::instance().alertCount() == 0) { // TESTING
+        auto alert1 = std::make_shared<Alert>(
+            QDateTime::currentDateTime(),
+            Severity::Alert,
+            "source_name",
+            "rule_name"
+        );
+        DatabaseManager::instance().saveAlert(alert1);
+    }
 }
+
 
 TestWindow::~TestWindow()
 {
     delete ui;
 }
+
 
 void TestWindow::sendTestLog(QByteArray log)
 {
@@ -74,6 +93,7 @@ void TestWindow::sendTestLog(QByteArray log)
         //qDebug() << "Sent UDP datagram, bytes:" << bytesSent;
     }
 }
+
 
 void TestWindow::on_user_successfulLoginButton_clicked()
 {
@@ -191,15 +211,24 @@ void TestWindow::on_tempSensorSlider_sliderReleased()
 }
 
 
-// Will need to create a timer with a duration of 60s. Start/Stop with enabled, at timeout, reset and report if sensor is offline, else report normal status
-void TestWindow::on_vibrationSensorOnlineCheckbox_checkStateChanged(const Qt::CheckState &arg1)
-{
-    //TODO
-}
-
-
 void TestWindow::on_vibrationSensorEnabledCheckbox_checkStateChanged(const Qt::CheckState &arg1)
 {
-    //TODO
+    if (arg1 == Qt::CheckState::Checked) {
+        logTimer->setInterval(60 * 1000); // 60 seconds
+        logTimer->start();
+    } else if (arg1 == Qt::CheckState::Unchecked) {
+        logTimer->stop();
+    }
 }
 
+
+void TestWindow::onTimerTrigger()
+{
+    if (ui->vibrationSensorOnlineCheckbox->isChecked()) {
+        auto timestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
+        QString structuredData = R"([sensor@32473 id="vib-002" type="vibration" unit="mm/s" value="1.2" status="normal" threshold="5.0"])";
+        QString log = QString("<134>1 %1 sensor-gateway-01 vibration-sensor 4521 ID47 %2 Vibration levels within normal operating range.").arg(timestamp, structuredData);
+        sendTestLog(log.toUtf8());
+    }
+    logTimer->start();
+}

@@ -17,6 +17,7 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
 
     DatabaseManager::instance(); // has to be first since others will call on it
+    AlertManager::instance();
     SyslogReceiver receiver; // Needs to be before MainWindow because TestWindow will send logs to socket created by this class
     LogParser parser; // See above
     MainWindow window; // has to be before RuleManager because this will create TestWindow which populates db will filler if empty
@@ -31,9 +32,9 @@ int main(int argc, char *argv[])
         ruleManager.checkRules(logEntry);
     });
 
-    QObject::connect(&ruleManager, &RuleManager::ruleViolated, &window, [&](std::shared_ptr<Rule> violatedRule) {
-        qDebug() << "Rule Violated: " << violatedRule->name << " " << QTime().currentTime();
-    });
+    //QObject::connect(&ruleManager, &RuleManager::ruleViolated, &window, [&](std::shared_ptr<Rule> violatedRule) {
+    //    qDebug() << "Rule Violated: " << violatedRule->name << " " << QTime().currentTime();
+    //});
 
     window.show();
     return app.exec();

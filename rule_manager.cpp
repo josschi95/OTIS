@@ -2,6 +2,7 @@
 
 #include "rule_manager.h"
 #include "database_manager.h"
+#include "alert_manager.h"
 
 
 RuleManager::RuleManager(QObject *parent) : QObject(parent)
@@ -18,6 +19,13 @@ RuleManager::RuleManager(QObject *parent) : QObject(parent)
     updateTimer->setInterval(5 * 1000); // 5 seconds
     connect(updateTimer, &QTimer::timeout, this, &RuleManager::update);
     updateTimer->start();
+}
+
+
+void RuleManager::ruleViolated(std::shared_ptr<Rule> rule, QString source)
+{
+    std::shared_ptr<Alert> alert = std::make_shared<Alert>(QDateTime::currentDateTime(), rule->alertSeverity, source, rule->name);
+    AlertManager::instance().raiseAlert(alert);
 }
 
 
@@ -41,8 +49,8 @@ void RuleManager::update()
             clearOldTimestamps(timestamps, now, windowMs);
 
             int count = timestamps.size(); // Verify that there are the given number of logs remaining within the time window
-            if (group.rule->triggerCondition == ComparisonOperator::lt && count < group.rule->thresholdCount) emit ruleViolated(group.rule);
-            if (group.rule->triggerCondition == ComparisonOperator::lte && count <= group.rule->thresholdCount) emit ruleViolated(group.rule);
+            if (group.rule->triggerCondition == ComparisonOperator::lt && count < group.rule->thresholdCount) ruleViolated(group.rule, it.key());
+            if (group.rule->triggerCondition == ComparisonOperator::lte && count <= group.rule->thresholdCount) ruleViolated(group.rule, it.key());
 
             ++it;
         }
@@ -120,8 +128,9 @@ void RuleManager::checkRules(const LogEntry& log)
     for (const auto& rule : rules) {
         if (!rule->enabled) continue;
         if (!rule->evaluate(log)) continue;
-
         //qDebug() << "log evaluated true";
+
+        QString host = rule->perHost ? log.hostname : "global";
 
         bool timeBased = false;
         for (auto& group : ruleGroups) {
@@ -129,7 +138,7 @@ void RuleManager::checkRules(const LogEntry& log)
             //qDebug() << "Timed rule";
             timeBased = true;
 
-            QString host = rule->perHost ? log.hostname : "global";
+
             QList<QDateTime>& timestamps = group.entityTimestamps[host];
             timestamps.append(now);
 
@@ -138,14 +147,14 @@ void RuleManager::checkRules(const LogEntry& log)
 
             // Check if the threshold has been exceeded within the time window
             int count = timestamps.size();
-            if (group.rule->triggerCondition == ComparisonOperator::gt && count > group.rule->thresholdCount) emit ruleViolated(group.rule);
-            if (group.rule->triggerCondition == ComparisonOperator::gte && count >= group.rule->thresholdCount) emit ruleViolated(group.rule);
+            if (group.rule->triggerCondition == ComparisonOperator::gt && count > group.rule->thresholdCount) ruleViolated(group.rule, host);
+            if (group.rule->triggerCondition == ComparisonOperator::gte && count >= group.rule->thresholdCount) ruleViolated(group.rule, host);
         }
 
         // Not time-based, Generate Alert
         if (!timeBased) {
             //qDebug() << "Not time based";
-            emit ruleViolated(rule);
+            ruleViolated(rule, host);
         }
     }
 }
@@ -162,3 +171,5 @@ void RuleManager::clearOldTimestamps(QList<QDateTime>& timestamps, const QDateTi
         }
     }
 }
+
+

@@ -4,11 +4,7 @@
 #include "database_manager.h"
 
 
-RulesPage::RulesPage(QWidget *parent)
-    : QWidget(parent)
-{
-
-}
+RulesPage::RulesPage(QWidget *parent) : QWidget(parent) {}
 
 
 void RulesPage::initialize()
@@ -35,6 +31,7 @@ void RulesPage::initialize()
     refreshRulesTable();
 }
 
+
 void RulesPage::addRow(const QStringList &row)
 {
     const int newRow = rulesTable->rowCount();
@@ -54,10 +51,12 @@ void RulesPage::addRow(const QStringList &row)
     }
 }
 
+
 void RulesPage::setRulesManager(RuleManager &rm)
 {
     ruleManager = &rm;
 }
+
 
 void RulesPage::openNewRuleDialog()
 {
@@ -65,6 +64,7 @@ void RulesPage::openNewRuleDialog()
     newRuleDialog->raise();
     newRuleDialog->activateWindow();
 }
+
 
 void RulesPage::refreshRulesTable()
 {
@@ -77,6 +77,7 @@ void RulesPage::refreshRulesTable()
         addRow(row);
     }
 }
+
 
 void RulesPage::openEditRuleDialog()
 {

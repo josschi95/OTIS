@@ -10,10 +10,12 @@ SyslogReceiver::SyslogReceiver(QObject *parent) : QObject(parent)
     connect(SettingsManager::instance(), &SettingsManager::syslogPortChanged, this, &SyslogReceiver::createSocket);
 }
 
+
 SyslogReceiver::~SyslogReceiver()
 {
     closeSocket();
 }
+
 
 void SyslogReceiver::createSocket()
 {
@@ -26,6 +28,7 @@ void SyslogReceiver::createSocket()
     connect(udpSocket, &QUdpSocket::readyRead, this, &SyslogReceiver::processPendingDatagrams);
 }
 
+
 void SyslogReceiver::closeSocket()
 {
     //qDebug() << "Tearing down old socket";
@@ -33,6 +36,7 @@ void SyslogReceiver::closeSocket()
     udpSocket->deleteLater();
     udpSocket = nullptr;
 }
+
 
 void SyslogReceiver::processPendingDatagrams()
 {

@@ -22,10 +22,12 @@ TableFiltersDialog::TableFiltersDialog(QWidget *parent)
     // Is there a reason I'm not doing this for facility?
 }
 
+
 TableFiltersDialog::~TableFiltersDialog()
 {
     delete ui;
 }
+
 
 void TableFiltersDialog::applyFilters(LogFilters& filters) const
 {
@@ -75,6 +77,7 @@ void TableFiltersDialog::applyFilters(LogFilters& filters) const
     filters.msgIDFilter = ui->msgidLineEdit->text();
     filters.messageFilter = ui->messageLineEdit->text();
 }
+
 
 void TableFiltersDialog::resetFilters()
 {

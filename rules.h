@@ -10,7 +10,7 @@
 
 /*/home/joe/Projects/OTIS/rules.h:12:8: Excessive padding in 'struct Rule' (34 padding bytes, where 2 is optimal).
  * Optimal fields order:
- * name, hostnameValue, appnameValue, procIDValue, msgIDValue, messageValue, id, severity, severityOp,
+ * name, hostname, appnameValue, procIDValue, msgIDValue, messageValue, id, severity, severityOp,
  * facility, facilityOp, hostnameOp, appnameOp, procIDOp, msgIDOp, messageOp, thresholdCount, timeWindow,
  * triggerCondition, enabled, perHost
  *
@@ -22,12 +22,13 @@ struct Rule {
     ~Rule() = default;
 
     QString name; // really just for user convenience
-    QString hostnameValue = QString();
-    QString appnameValue = QString();
-    QString procIDValue = QString();
-    QString msgIDValue = QString();
-    QString messageValue = QString();
+    QString hostname = QString();
+    QString appname = QString();
+    QString procid = QString();
+    QString msgid = QString();
+    QString message = QString();
 
+    Severity alertSeverity = Severity::Debug;
     int id = -1;
     int severity = -1;
     ComparisonOperator severityOp = ComparisonOperator::eq;
@@ -35,8 +36,8 @@ struct Rule {
     ComparisonOperator facilityOp = ComparisonOperator::eq;
     StringComparison hostnameOp = StringComparison::ExactMatch;
     StringComparison appnameOp = StringComparison::ExactMatch;
-    StringComparison procIDOp = StringComparison::ExactMatch;
-    StringComparison msgIDOp = StringComparison::ExactMatch;
+    StringComparison procidOp = StringComparison::ExactMatch;
+    StringComparison msgidOp = StringComparison::ExactMatch;
     // structured data ?
     StringComparison messageOp = StringComparison::ExactMatch;
     int thresholdCount = -1;
@@ -81,11 +82,11 @@ struct Rule {
         // I don't think I need to include date or time here? It wouldn't make sense to specify a single date for a log
         // HOWEVER... it would make sense to specify a QTime field, e.g. for logins after normal working hours
 
-        if (!hostnameValue.isEmpty() && !compare(hostnameOp, hostnameValue, log.hostname)) return false;
-        if (!appnameValue.isEmpty() && !compare(appnameOp, appnameValue, log.appname)) return false;
-        if (!procIDValue.isEmpty() && !compare(procIDOp, procIDValue, log.procid)) return false;
-        if (!msgIDValue.isEmpty() && !compare(msgIDOp, msgIDValue, log.msgid)) return false;
-        if (!messageValue.isEmpty() && !compare(messageOp, messageValue, log.msg)) return false;
+        if (!hostname.isEmpty() && !compare(hostnameOp, hostname, log.hostname)) return false;
+        if (!appname.isEmpty() && !compare(appnameOp, appname, log.appname)) return false;
+        if (!procid.isEmpty() && !compare(procidOp, procid, log.procid)) return false;
+        if (!msgid.isEmpty() && !compare(msgidOp, msgid, log.msgid)) return false;
+        if (!message.isEmpty() && !compare(messageOp, message, log.msg)) return false;
 
         return true;
     }

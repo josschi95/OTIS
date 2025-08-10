@@ -42,6 +42,7 @@ LogParser::LogParser(QObject *parent) : QObject(parent)
     //qDebug() << "Num LogFormats: " << logFormats.size();
 }
 
+
 //TODO: I think this is old...?
 QDateTime LogParser::parseTimestamp(const QString& ts, const QString& format) const {
     if (format.toLower() == "iso8601") {
@@ -53,6 +54,7 @@ QDateTime LogParser::parseTimestamp(const QString& ts, const QString& format) co
     }
     return QDateTime::fromString(ts, format);
 }
+
 
 LogEntry LogParser::parse(const QString &line)
 {

@@ -18,11 +18,13 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     // Initialize promoted widgets
+    ui->page1_alerts->initialize();
     ui->page2_rules->initialize();
     ui->page3_logs->initialize();
 
     onTestWindowButtonClicked();
 }
+
 
 MainWindow::~MainWindow()
 {
@@ -46,6 +48,7 @@ void MainWindow::onTestWindowButtonClicked()
     testWindow->raise();
     testWindow->activateWindow();
 }
+
 
 void MainWindow::setActivePage(int index)
 {

@@ -25,7 +25,7 @@ DatabaseManager& DatabaseManager::instance()
             qCritical() << "Failed to open DB:" << db.lastError().text();
         } else {
             QSqlQuery logsQuery;
-            logsQuery.exec(R"(
+            if (!logsQuery.exec(R"(
                 CREATE TABLE IF NOT EXISTS logs (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     severity NUMBER,
@@ -38,9 +38,7 @@ DatabaseManager& DatabaseManager::instance()
                     structured_data TEXT,
                     message TEXT
                 )
-            )");
-
-            if (!logsQuery.exec()) {
+            )")) {
                 qCritical() << "Failed to create logs table:" << logsQuery.lastError().text();
                 std::abort(); // Crash... gracefully
             }
@@ -50,6 +48,8 @@ DatabaseManager& DatabaseManager::instance()
                 CREATE TABLE IF NOT EXISTS rules (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT,
+                    alertSeverity NUMBER,
+
                     severity NUMBER,
                     severityOp NUMBER,
                     facility NUMBER,
@@ -75,12 +75,29 @@ DatabaseManager& DatabaseManager::instance()
                 qCritical() << "Failed to create rules table:" << rulesQuery.lastError().text();
                 std::abort(); // Crash... again
             }
+
+            QSqlQuery alertsQuery;
+            if (!alertsQuery.exec(R"(
+                CREATE TABLE IF NOT EXISTS alerts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT,
+                    severity TEXT,
+                    source TEXT,
+                    rule_name TEXT,
+                    acknowledged BOOLEAN
+                )
+            )")) {
+                qCritical() << "Failed to create alerts table:" << alertsQuery.lastError().text();
+                std::abort(); // Crash one last time
+            }
         }
         initialized = true;
     }
 
     return instance;
 }
+
+/********** Logs **********/
 
 int DatabaseManager::logCount()
 {
@@ -93,6 +110,7 @@ int DatabaseManager::logCount()
     return 0;
 }
 
+
 int DatabaseManager::ruleCount()
 {
     QSqlQuery countQuery;
@@ -100,6 +118,30 @@ int DatabaseManager::ruleCount()
         if (countQuery.next()) {
             return countQuery.value(0).toInt();
         }
+    }
+    return 0;
+}
+
+int DatabaseManager::alertCount()
+{
+    QSqlQuery countQuery;
+    if (countQuery.exec("SELECT COUNT(*) FROM alerts")) {
+        if (countQuery.next()) {
+            return countQuery.value(0).toInt();
+        }
+    }
+    return 0;
+}
+
+int DatabaseManager::alertCount(Severity severity)
+{
+    QSqlQuery countQuery;
+    countQuery.prepare("SELECT COUNT(*) FROM alerts WHERE severity = :severity");
+    countQuery.bindValue(":severity", static_cast<int>(severity));
+    if (!countQuery.exec()) {
+        qWarning() << "Alert count query failed: " << countQuery.lastError().text();
+    } else if (countQuery.next()){
+        return countQuery.value(0).toInt();
     }
     return 0;
 }
@@ -123,7 +165,7 @@ void DatabaseManager::insertLog(const LogEntry& logEntry)
     query.addBindValue(logEntry.msg);
 
     if (!query.exec()) {
-        qDebug() << "Insert failed: " << query.lastError().text();
+        qDebug() << "Log insert failed: " << query.lastError().text();
         return;
     }
 
@@ -273,15 +315,47 @@ QString DatabaseManager::facilityString(const int facility)
 }
 
 
+/********** Rules **********/
+
 QList<std::shared_ptr<Rule>> DatabaseManager::loadRules()
-{
-    QString sql = "SELECT id, name, severity, severityOp, facility, facilityOp, hostname, hostnameOp, appname, appnameOp, procid, procidOp, msgid, msgidOp, message, messageOp, threshold, timeWindow, threshOp, perHost, enabled FROM rules";
+{    
+    QSqlQuery query;
+    if (!query.exec(R"(SELECT
+        id, name, alertSeverity,
+        severity, severityOp,
+        facility, facilityOp,
+        hostname, hostnameOp,
+        appname, appnameOp,
+        procid, procidOp,
+        msgid, msgidOp,
+        message, messageOp,
+        threshold, timeWindow, threshOp,
+        perHost, enabled
+        FROM rules
+    )")) {
+        qWarning() << "Database rules query failed: " << query.lastError().text();
+        return {};
+    }
+    //QString sql = "SELECT id, name, alertSeverity, severity, severityOp, facility, facilityOp, hostname, hostnameOp, appname, appnameOp, procid, procidOp, msgid, msgidOp, message, messageOp, threshold, timeWindow, threshOp, perHost, enabled FROM rules";
+    /*QString sql = R"(SELECT
+        id, name, alertSeverity,
+        severity, severityOp,
+        facility, facilityOp,
+        hostname, hostnameOp,
+        appname, appnameOp,
+        procid, procidOp,
+        msgid, msgidOp,
+        message, messageOp,
+        threshold, timeWindow, threshOp,
+        perHost, enabled
+        FROM rules
+    )";
     QSqlQuery query(db);
 
     if (!query.exec(sql)) {
         qWarning() << "Database rules query failed: " << query.lastError().text();
         return {};
-    }
+    }*/
 
     QList<std::shared_ptr<Rule>> rules;
     while (query.next()) {
@@ -289,25 +363,26 @@ QList<std::shared_ptr<Rule>> DatabaseManager::loadRules()
 
         rule->id = query.value(0).toInt();
         rule->name = query.value(1).toString();
-        rule->severity = query.value(2).toInt();
-        rule->severityOp = static_cast<ComparisonOperator>(query.value(3).toInt());
-        rule->facility = query.value(4).toInt();
-        rule->facilityOp = static_cast<ComparisonOperator>(query.value(5).toInt());
-        rule->hostnameValue = query.value(6).toString();
-        rule->hostnameOp = static_cast<StringComparison>(query.value(7).toInt());
-        rule->appnameValue = query.value(8).toString();
-        rule->appnameOp = static_cast<StringComparison>(query.value(9).toInt());
-        rule->procIDValue = query.value(10).toString();
-        rule->procIDOp = static_cast<StringComparison>(query.value(11).toInt());
-        rule->msgIDValue = query.value(12).toString();
-        rule->msgIDOp = static_cast<StringComparison>(query.value(13).toInt());
-        rule->messageValue = query.value(14).toString();
-        rule->messageOp = static_cast<StringComparison>(query.value(15).toInt());
-        rule->thresholdCount = query.value(16).toInt();
-        rule->timeWindow = QTime::fromString(query.value(17).toString());
-        rule->triggerCondition = static_cast<ComparisonOperator>(query.value(18).toInt());
-        rule->perHost = query.value(19).toBool();
-        rule->enabled = query.value(20).toBool();
+        rule->alertSeverity = static_cast<Severity>(query.value(2).toInt());
+        rule->severity = query.value(3).toInt();
+        rule->severityOp = static_cast<ComparisonOperator>(query.value(4).toInt());
+        rule->facility = query.value(5).toInt();
+        rule->facilityOp = static_cast<ComparisonOperator>(query.value(6).toInt());
+        rule->hostname = query.value(7).toString();
+        rule->hostnameOp = static_cast<StringComparison>(query.value(8).toInt());
+        rule->appname = query.value(9).toString();
+        rule->appnameOp = static_cast<StringComparison>(query.value(10).toInt());
+        rule->procid = query.value(11).toString();
+        rule->procidOp = static_cast<StringComparison>(query.value(12).toInt());
+        rule->msgid = query.value(13).toString();
+        rule->msgidOp = static_cast<StringComparison>(query.value(14).toInt());
+        rule->message = query.value(15).toString();
+        rule->messageOp = static_cast<StringComparison>(query.value(16).toInt());
+        rule->thresholdCount = query.value(17).toInt();
+        rule->timeWindow = QTime::fromString(query.value(18).toString());
+        rule->triggerCondition = static_cast<ComparisonOperator>(query.value(19).toInt());
+        rule->perHost = query.value(20).toBool();
+        rule->enabled = query.value(21).toBool();
 
         rules << rule;
     }
@@ -325,6 +400,7 @@ void DatabaseManager::saveRule(std::shared_ptr<Rule> rule)
         query.prepare(R"(
             UPDATE rules SET
             name = :name,
+            alertSeverity = :alertSeverity,
             severity = :severity, severityOp = :severityOp,
             facility = :facility, facilityOp = :facilityOp,
             hostname = :hostname, hostnameOp = :hostnameOp,
@@ -342,6 +418,7 @@ void DatabaseManager::saveRule(std::shared_ptr<Rule> rule)
         query.prepare(R"(
             INSERT INTO rules (
                 name,
+                alertSeverity,
                 severity, severityOp,
                 facility, facilityOp,
                 hostname, hostnameOp,
@@ -353,6 +430,7 @@ void DatabaseManager::saveRule(std::shared_ptr<Rule> rule)
                 perHost, enabled
             ) VALUES (
                 :name,
+                :alertSeverity,
                 :severity, :severityOp,
                 :facility, :facilityOp,
                 :hostname, :hostnameOp,
@@ -367,19 +445,20 @@ void DatabaseManager::saveRule(std::shared_ptr<Rule> rule)
     }
 
     query.bindValue(":name", rule->name);
+    query.bindValue(":alertSeverity", static_cast<int>(rule->alertSeverity));
     query.bindValue(":severity", rule->severity);
     query.bindValue(":severityOp", static_cast<int>(rule->severityOp));
     query.bindValue(":facility", rule->facility);
     query.bindValue(":facilityOp", static_cast<int>(rule->facilityOp));
-    query.bindValue(":hostname", rule->hostnameValue);
+    query.bindValue(":hostname", rule->hostname);
     query.bindValue(":hostnameOp", static_cast<int>(rule->hostnameOp));
-    query.bindValue(":appname", rule->appnameValue);
+    query.bindValue(":appname", rule->appname);
     query.bindValue(":appnameOp", static_cast<int>(rule->appnameOp));
-    query.bindValue(":procid", rule->procIDValue);
-    query.bindValue(":procidOp", static_cast<int>(rule->procIDOp));
-    query.bindValue(":msgid", rule->msgIDValue);
-    query.bindValue(":msgIDOp", static_cast<int>(rule->msgIDOp));
-    query.bindValue(":message", rule->messageValue);
+    query.bindValue(":procid", rule->procid);
+    query.bindValue(":procidOp", static_cast<int>(rule->procidOp));
+    query.bindValue(":msgid", rule->msgid);
+    query.bindValue(":msgIDOp", static_cast<int>(rule->msgidOp));
+    query.bindValue(":message", rule->message);
     query.bindValue(":messageOp", static_cast<int>(rule->messageOp));
     query.bindValue(":threshold", rule->thresholdCount);
     query.bindValue(":timeWindow", rule->timeWindow);
@@ -388,15 +467,14 @@ void DatabaseManager::saveRule(std::shared_ptr<Rule> rule)
     query.bindValue(":enabled", rule->enabled);
 
     if (!query.exec()) {
-        qDebug() << ((rule->id > 0) ? "Update failed: " : "Insert failed: ") << query.lastError().text();
+        qDebug() << ((rule->id > 0) ? "Rule update failed: " : "Rule insert failed: ") << query.lastError().text();
     } else if (rule->id <= 0) { // Assign id to new rule
         QVariant lastId = query.lastInsertId();
         if (!lastId.isValid()) {
             qDebug() << "Could not retrieve last insert ID.";
             return;
         }
-        int id = lastId.toInt();
-        rule->id = id;
+        rule->id = lastId.toInt();
     }
 
     emit ruleSaved(rule);
@@ -404,17 +482,49 @@ void DatabaseManager::saveRule(std::shared_ptr<Rule> rule)
 
 
 QList<QStringList> DatabaseManager::queryRules()
-{
-    QString sql = "SELECT name, severity, severityOp, facility, facilityOp, hostname, hostnameOp, appname, appnameOp, procid, procidOp, msgid, msgidOp, message, messageOp, threshold, timeWindow, threshOp, perHost, enabled, id FROM rules";
+{    
+    QSqlQuery rulesQuery;
+    if (!rulesQuery.exec(R"(SELECT
+        name, alertSeverity,
+        severity, severityOp,
+        facility, facilityOp,
+        hostname, hostnameOp,
+        appname, appnameOp,
+        procid, procidOp,
+        msgid, msgidOp,
+        message, messageOp,
+        threshold, timeWindow, threshOp,
+        perHost, enabled, id
+        FROM rules
+    )")) {
+        qWarning() << "Database rules query failed: " << rulesQuery.lastError().text();
+        return {};
+    }
+
+    //QString sql = "SELECT name, alertSeverity, severity, severityOp, facility, facilityOp, hostname, hostnameOp, appname, appnameOp, procid, procidOp, msgid, msgidOp, message, messageOp, threshold, timeWindow, threshOp, perHost, enabled, id FROM rules";
+    /*QString sql = R"(SELECT
+        name, alertSeverity,
+        severity, severityOp,
+        facility, facilityOp,
+        hostname, hostnameOp,
+        appname, appnameOp,
+        procid, procidOp,
+        msgid, msgidOp,
+        message, messageOp,
+        threshold, timeWindow, threshOp,
+        perHost, enabled, id
+        FROM rules
+    )";
+
     QSqlQuery query(db);
 
     if (!query.exec(sql)) {
         qWarning() << "Database rules query failed: " << query.lastError().text();
         return {};
-    }
+    }*/
 
     QList<QStringList> rows;
-    while (query.next()) rows << getRuleRow(query);
+    while (rulesQuery.next()) rows << getRuleRow(rulesQuery);
     return rows;
 }
 
@@ -423,15 +533,16 @@ QStringList DatabaseManager::getRuleRow(const QSqlQuery& query)
 {    
     static const QStringList opStrings = { "==", "!=", "<", "<=", ">", ">=" };
     static const QStringList compStrings = { "Exact", "Contains", "Starts With" };
-
+    static const QStringList severityStrings = { "Emergency", "Alert", "Critical", "Error", "Warning", "Notice", "Informational", "Debug" };
     // Values are checked and replaced with "-" if empty
     // Trying to make things look somewhat presentable
 
     QStringList row;
     row << query.value(0).toString(); // name
+    row << severityStrings[query.value(1).toInt()];
 
-    // Severity(1) and Facility(3)
-    for (int i = 1; i < 5; i+=2) {
+    // Severity(2) and Facility(4)
+    for (int i = 2; i < 6; i+=2) {
         int value = query.value(i).toInt();
         if (value >= 0) {
             row << QString(opStrings[query.value(i+1).toInt()] + QString::number(value));
@@ -440,9 +551,9 @@ QStringList DatabaseManager::getRuleRow(const QSqlQuery& query)
         }
     }
 
-    // hostname(5), appname, procid, msgid, and message(13) all follow the same rules
+    // hostname(6), appname, procid, msgid, and message(14) all follow the same rules/format
     // The string comparison = index + 1
-    for (int i = 5; i < 14; i+=2) {
+    for (int i = 6; i < 15; i+=2) {
         QString fieldName = query.value(i).toString();
         if (!fieldName.isEmpty()) {
             row << QString(compStrings[query.value(i+1).toInt()] + ": " + fieldName);
@@ -451,20 +562,21 @@ QStringList DatabaseManager::getRuleRow(const QSqlQuery& query)
         }
     }
 
-    // threshold=15, timeWindow=16, threshOp=17
-    int thresh = query.value(15).toInt();
+    // threshold=16, timeWindow=17, threshOp=18
+    int thresh = query.value(16).toInt();
     if (thresh >= 0) {
-        row << QString(query.value(17).toString() + " " + QString::number(thresh) + " in " + query.value(16).toString());
+        row << QString(query.value(18).toString() + " " + QString::number(thresh) + " in " + query.value(17).toString());
     } else {
         row << "-";
     }
 
-    row << (query.value(18).toBool() ? "True" : "False"); // perHost
-    row << (query.value(19).toBool() ? "1" : "0");        // enabled
+    row << (query.value(19).toBool() ? "True" : "False"); // perHost
+    row << (query.value(20).toBool() ? "1" : "0");        // enabled
 
-    row << query.value(20).toString(); // database id
+    row << query.value(21).toString(); // database id
     return row;
 }
+
 
 void DatabaseManager::deleteRule(std::shared_ptr<Rule> rule)
 {
@@ -477,4 +589,121 @@ void DatabaseManager::deleteRule(std::shared_ptr<Rule> rule)
         return;
     }
     emit ruleDeleted(rule);
+}
+
+/********** Alerts **********/
+
+QList<std::shared_ptr<Alert>> DatabaseManager::loadAlerts()
+{
+    QSqlQuery query;
+    if (!query.exec(R"(SELECT
+        id, timestamp, severity,
+        source, rule_name, acknowledged
+        FROM alerts
+    )")) {
+        qWarning() << "Database alerts query failed: " << query.lastError().text();
+        return {};
+    }
+
+    QList<std::shared_ptr<Alert>> alerts;
+    while (query.next()) {
+        auto alert = std::make_shared<Alert>(
+            QDateTime::fromString(query.value(1).toString(), Qt::ISODate),
+            static_cast<Severity>(query.value(2).toInt()),
+            query.value(3).toString(),
+            query.value(4).toString()
+        );
+
+        alert->id = query.value(0).toInt();
+        alert->acknowledged = query.value(5).toBool();
+
+        alerts << alert;
+    }
+
+    return alerts;
+}
+
+
+QList<QStringList> DatabaseManager::queryAlerts()
+{
+    QSqlQuery alertsQuery;
+    if (!alertsQuery.exec(R"(SELECT
+        severity, timestamp, rule_name, source,
+        acknowledged, id
+        FROM alerts
+    )")) {
+        qWarning() << "Database alerts query failed: " << alertsQuery.lastError().text();
+        return {};
+    }
+
+    QList<QStringList> rows;
+    while (alertsQuery.next()) rows << getAlertRow(alertsQuery);
+    return rows;
+}
+
+
+QStringList DatabaseManager::getAlertRow(const QSqlQuery& query)
+{
+    static const QStringList severityStrings = { "Emergency", "Alert", "Critical", "Error", "Warning", "Notice", "Informational", "Debug" };
+
+    QStringList row;
+    row << severityStrings[query.value(0).toInt()]; // severity
+    row << query.value(1).toString(); // timestamp
+    row << query.value(2).toString(); // rule_name
+    row << query.value(3).toString(); // source
+    row << query.value(4).toString(); // acknowledged
+    row << query.value(5).toString(); // id
+    return row;
+}
+
+
+void DatabaseManager::saveAlert(std::shared_ptr<Alert> alert)
+{
+    QSqlQuery query;
+
+    if (alert->id > 0) { // Updating an existing alert
+        query.prepare(R"(
+            UPDATE alerts SET
+            acknowledged = :acknowledged
+            WHERE id = :id
+        )");
+        query.bindValue(":id", alert->id);
+    } else { // Storing a new alert
+        query.prepare(R"(
+            INSERT INTO alerts (timestamp, severity, source, rule_name, acknowledged)
+            VALUES (:timestamp, :severity, :source, :rule_name, :acknowledged)
+        )");
+        query.bindValue(":timestamp", alert->timestamp.toString(Qt::ISODate));
+        query.bindValue(":severity", static_cast<int>(alert->severity));
+        query.bindValue(":source", alert->source);
+        query.bindValue(":rule_name", alert->ruleName);
+    }
+    query.bindValue(":acknowledged", alert->acknowledged);
+
+    if (!query.exec()) {
+        qDebug() << ((alert->id > 0) ? "Alert update failed: " : "Alert insert failed: ") << query.lastError().text();
+    } else if (alert->id <= 0) { // Assign id to new alert
+        QVariant lastId = query.lastInsertId();
+        if (!lastId.isValid()) {
+            qDebug() << "Could not retrieve last insert ID.";
+            return;
+        }
+        alert->id = lastId.toInt();
+    }
+
+    emit alertSaved(alert);
+}
+
+
+void DatabaseManager::deleteAlert(std::shared_ptr<Alert> alert)
+{
+    qDebug() << "Deleting alert for " << alert->ruleName;
+    QSqlQuery query;
+    query.prepare("DELETE FROM alerts WHERE id = :id");
+    query.bindValue(":id", alert->id);
+    if (!query.exec()) {
+        qWarning() << "Failed to delete alert for: " << alert->ruleName << " - " << query.lastError().text();
+        return;
+    }
+    emit alertDeleted(alert);
 }

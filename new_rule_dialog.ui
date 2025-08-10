@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>510</width>
-    <height>403</height>
+    <height>472</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,12 +19,12 @@
      <x>10</x>
      <y>10</y>
      <width>491</width>
-     <height>389</height>
+     <height>451</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <layout class="QHBoxLayout" name="_07_Msg_2">
+     <layout class="QHBoxLayout" name="_01_Name">
       <item>
        <widget class="QLabel" name="label_8">
         <property name="minimumSize">
@@ -49,12 +49,12 @@
      </layout>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="_01_Severity">
+     <layout class="QHBoxLayout" name="_02_AlertSeverity">
       <item>
-       <widget class="QLabel" name="label">
+       <widget class="QLabel" name="label_10">
         <property name="minimumSize">
          <size>
-          <width>80</width>
+          <width>102</width>
           <height>0</height>
          </size>
         </property>
@@ -64,7 +64,113 @@
          </font>
         </property>
         <property name="text">
-         <string>Severity</string>
+         <string>Alert Severity</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="alertSeverityComboBox">
+        <property name="minimumSize">
+         <size>
+          <width>120</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>150</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <item>
+         <property name="text">
+          <string>Emergency</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Alert</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Critical</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Error</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Warning</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Notice</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Informational</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Debug</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_11">
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Log Values</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="_03_Severity">
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="minimumSize">
+         <size>
+          <width>102</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Log Severity</string>
         </property>
        </widget>
       </item>
@@ -78,32 +184,32 @@
         </property>
         <item>
          <property name="text">
-          <string>==</string>
+          <string> ==</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string>!=</string>
+          <string> !=</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string>&lt;</string>
+          <string> &lt;</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string>&lt;=</string>
+          <string> &lt;=</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string>&gt;</string>
+          <string> &gt;</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string>&gt;=</string>
+          <string> &gt;=</string>
          </property>
         </item>
        </widget>
@@ -114,12 +220,12 @@
      </layout>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="_02_Facility">
+     <layout class="QHBoxLayout" name="_04_Facility">
       <item>
        <widget class="QLabel" name="label_2">
         <property name="minimumSize">
          <size>
-          <width>80</width>
+          <width>102</width>
           <height>0</height>
          </size>
         </property>
@@ -143,32 +249,32 @@
         </property>
         <item>
          <property name="text">
-          <string>==</string>
+          <string> ==</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string>!=</string>
+          <string> !=</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string>&lt;</string>
+          <string> &lt;</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string>&lt;=</string>
+          <string> &lt;=</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string>&gt;</string>
+          <string> &gt;</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string>&gt;=</string>
+          <string> &gt;=</string>
          </property>
         </item>
        </widget>
@@ -179,7 +285,7 @@
      </layout>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="_03_Hostname">
+     <layout class="QHBoxLayout" name="_05_Hostname">
       <item>
        <widget class="QLabel" name="label_3">
         <property name="minimumSize">
@@ -229,7 +335,7 @@
      </layout>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="_04_Appname">
+     <layout class="QHBoxLayout" name="_06_Appname">
       <item>
        <widget class="QLabel" name="label_4">
         <property name="minimumSize">
@@ -279,7 +385,7 @@
      </layout>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="_05_Procid">
+     <layout class="QHBoxLayout" name="_07_Procid">
       <item>
        <widget class="QLabel" name="label_5">
         <property name="minimumSize">
@@ -329,7 +435,7 @@
      </layout>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="_06_Msgid">
+     <layout class="QHBoxLayout" name="_08_Msgid">
       <item>
        <widget class="QLabel" name="label_6">
         <property name="minimumSize">
@@ -379,7 +485,7 @@
      </layout>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="_07_Msg">
+     <layout class="QHBoxLayout" name="_09_Msg">
       <item>
        <widget class="QLabel" name="label_7">
         <property name="minimumSize">
@@ -442,7 +548,7 @@
      </spacer>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="_8_Limit">
+     <layout class="QHBoxLayout" name="_10_Limit">
       <item>
        <widget class="QLabel" name="label_9">
         <property name="minimumSize">
@@ -471,22 +577,22 @@
         </property>
         <item>
          <property name="text">
-          <string>&lt;</string>
+          <string> &lt;</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string>&lt;=</string>
+          <string> &lt;=</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string>&gt;</string>
+          <string> &gt;</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string>&gt;=</string>
+          <string> &gt;=</string>
          </property>
         </item>
        </widget>
@@ -527,7 +633,7 @@
      </spacer>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
+     <layout class="QHBoxLayout" name="_11_other">
       <item>
        <widget class="QCheckBox" name="ruleEnabledCheckBox">
         <property name="text">

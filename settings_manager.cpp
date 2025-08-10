@@ -7,6 +7,7 @@ SettingsManager* SettingsManager::instance()
     return &inst;
 }
 
+
 SettingsManager::SettingsManager()
 {
     QSettings settings;
@@ -21,11 +22,13 @@ SettingsManager::SettingsManager()
     port = settings.value("port", 5140).toInt();
 }
 
+
 /*** Syslog Port ***/
 int SettingsManager::getPort() const
 {
     return port;
 }
+
 
 void SettingsManager::setPort(const int num)
 {
@@ -38,11 +41,13 @@ void SettingsManager::setPort(const int num)
     emit syslogPortChanged();
 }
 
+
 /*** Time Zone ***/
 QTimeZone SettingsManager::currentTimeZone() const
 {
     return timeZone;
 }
+
 
 void SettingsManager::setTimeZone(const QTimeZone& tz)
 {
