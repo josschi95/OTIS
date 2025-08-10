@@ -4,6 +4,7 @@
 #include <QDateTime>
 
 #include "enums.h"
+#include "rules.h"
 
 
 struct Alert {
@@ -26,7 +27,7 @@ class AlertManager : public QObject
 public:
     static AlertManager& instance();
 
-    void raiseAlert(std::shared_ptr<Alert> alert);
+    void raiseAlert(std::shared_ptr<Alert> alert, std::shared_ptr<Rule> rule);
     std::shared_ptr<Alert> getAlertById(int id);
     QList<std::shared_ptr<Alert>> getAlerts(bool acknowledged = false);
 
@@ -40,6 +41,7 @@ private:
     explicit AlertManager(QObject *parent = nullptr) : QObject(parent) {}
     Q_DISABLE_COPY(AlertManager)
     QList<std::shared_ptr<Alert>> alerts;
+    QString expandEnvVars(QString text);
 };
 
 

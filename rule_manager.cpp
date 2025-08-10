@@ -25,7 +25,7 @@ RuleManager::RuleManager(QObject *parent) : QObject(parent)
 void RuleManager::ruleViolated(std::shared_ptr<Rule> rule, QString source)
 {
     std::shared_ptr<Alert> alert = std::make_shared<Alert>(QDateTime::currentDateTime(), rule->alertSeverity, source, rule->name);
-    AlertManager::instance().raiseAlert(alert);
+    AlertManager::instance().raiseAlert(alert, rule);
 }
 
 

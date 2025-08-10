@@ -44,6 +44,8 @@ void NewRuleDialog::reset()
     ui->msgComboBox->setCurrentIndex(0);
     ui->limitComboBox->setCurrentIndex(0);
 
+    ui->scriptPathLineEdit->setText(QString());
+    ui->scriptArgsLineEdit->setText(QString());
     ui->severityLineEdit->setText(QString());
     ui->facilityLineEdit->setText(QString());
     ui->hostnameLineEdit->setText(QString());
@@ -96,6 +98,8 @@ void NewRuleDialog::parseNewRule()
     std::shared_ptr<Rule> rule = ruleToEdit ? ruleToEdit : std::make_shared<Rule>();
 
     rule->name = ui->nameLineEdit->text();
+    rule->scriptPath = ui->scriptPathLineEdit->text();
+    rule->scriptArgs = ui->scriptArgsLineEdit->text();
     rule->alertSeverity = static_cast<Severity>(ui->alertSeverityComboBox->currentIndex());
     rule->enabled = ui->ruleEnabledCheckBox->isChecked();
     rule->perHost = ui->perHostCheckBox->isChecked();
@@ -156,6 +160,8 @@ void NewRuleDialog::setRuleToEdit(std::shared_ptr<Rule> rule)
     ui->deleteRuleButton->setEnabled(true);
 
     ui->nameLineEdit->setText(rule->name);
+    ui->scriptPathLineEdit->setText(rule->scriptPath);
+    ui->scriptArgsLineEdit->setText(rule->scriptArgs);
     ui->ruleEnabledCheckBox->setChecked(rule->enabled);
     ui->perHostCheckBox->setChecked(rule->perHost);
 

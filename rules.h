@@ -28,7 +28,10 @@ struct Rule {
     QString msgid = QString();
     QString message = QString();
 
+    QString scriptPath = QString();
+    QString scriptArgs = QString();
     Severity alertSeverity = Severity::Debug;
+
     int id = -1;
     int severity = -1;
     ComparisonOperator severityOp = ComparisonOperator::eq;

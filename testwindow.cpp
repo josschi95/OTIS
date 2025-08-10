@@ -49,6 +49,8 @@ TestWindow::TestWindow(QWidget *parent)
         failedLoginsRule->thresholdCount = 3;
         failedLoginsRule->timeWindow = QTime().fromString("00:01:00");
         failedLoginsRule->triggerCondition = ComparisonOperator::gte;
+        failedLoginsRule->scriptPath = "~/Projects/OTIS/test_alert.sh";
+        failedLoginsRule->scriptArgs = "{hostname} \"test alert\"";
 
         auto noLogRule = std::make_shared<Rule>();
         noLogRule->name = "No Incoming Logs";

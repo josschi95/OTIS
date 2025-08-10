@@ -1,3 +1,9 @@
+#include <QRegularExpression>
+#include <QApplication>
+#include <QMainWindow>
+#include <QProcess>
+#include <QDir>
+
 #include "alert_manager.h"
 #include "database_manager.h"
 
@@ -16,14 +22,37 @@ AlertManager& AlertManager::instance()
     return instance;
 }
 
-void AlertManager::raiseAlert(std::shared_ptr<Alert> alert)
+void AlertManager::raiseAlert(std::shared_ptr<Alert> alert, std::shared_ptr<Rule> rule)
 {
-    qDebug() << "(AlertManager) raising alert for rule: " << alert->ruleName;
+    //qDebug() << "(AlertManager) raising alert for rule: " << alert->ruleName;
     DatabaseManager::instance().saveAlert(alert); // signal will refresh alert page
 
-    // Flashing UI
+    // Flashing UI handled by MainWindow, triggered by alertRaised
+
+    for (QWidget *w : QApplication::topLevelWidgets()) { // Flash in dock/tray
+        if (QMainWindow *main = qobject_cast<QMainWindow*>(w)) {
+            QApplication::alert(main, 500);
+        }
+    }
+
+    QApplication::beep(); // audio cue
+
     // External communication?
-    // Script hooks
+
+    if (!rule->scriptPath.isEmpty()) { // Script hooks
+        QString path = rule->scriptPath;
+        path.replace("$HOME", QDir::homePath());
+        if (path.startsWith("~")) path.replace(0, 1, QDir::homePath());
+
+        QString args = rule->scriptArgs;
+        args.replace("{hostname}", alert->source);
+
+        QStringList argsList = QProcess::splitCommand(args);
+
+        if (!QProcess::startDetached(path, argsList)) {
+            qWarning() << "Failed to run script: " << rule->scriptPath << argsList;
+        }
+    }
 
     emit alertRaised(alert);
 }

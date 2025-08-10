@@ -26,10 +26,13 @@ public:
 private slots:
     void onTestWindowButtonClicked();
     void setActivePage(int index);
+    void alertRaised();
 
 private:
     Ui::MainWindow *ui;
     QList<QPushButton*> pageSelectButtons;
+    QTimer *alertTimer;
+    bool buttonIsRed;
 
     //TESTING
     TestWindow *testWindow = nullptr;

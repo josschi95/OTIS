@@ -145,7 +145,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="devicesSelectButton">
+             <widget class="QPushButton" name="alertsSelectButton">
               <property name="minimumSize">
                <size>
                 <width>140</width>
@@ -270,7 +270,7 @@
           </sizepolicy>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>2</number>
          </property>
          <widget class="QWidget" name="page0_overview"/>
          <widget class="AlertsPage" name="page1_alerts">
@@ -506,6 +506,11 @@
                 <column>
                  <property name="text">
                   <string>Alert Severity</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>Script Hook</string>
                  </property>
                 </column>
                 <column>

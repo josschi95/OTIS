@@ -1,6 +1,8 @@
 #include "ui_mainwindow.h"
 #include "mainwindow.h"
 #include "testwindow.h"
+#include "database_manager.h"
+#include "alert_manager.h"
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -8,7 +10,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    pageSelectButtons = { ui->overviewSelectButton, ui->devicesSelectButton, ui->rulesSelectButton, ui->logsSelectButton };
+    pageSelectButtons = { ui->overviewSelectButton, ui->alertsSelectButton, ui->rulesSelectButton, ui->logsSelectButton };
     setActivePage(0);
     for (int i = 0; i < pageSelectButtons.count(); ++i) {
         int index = i;
@@ -16,6 +18,28 @@ MainWindow::MainWindow(QWidget *parent)
             setActivePage(index);
         });
     }
+
+    alertTimer = new QTimer(this);
+    connect(ui->alertsSelectButton, &QPushButton::clicked, this, [&]() {
+        alertTimer->stop();
+        ui->alertsSelectButton->setStyleSheet("");
+    });
+    connect(alertTimer, &QTimer::timeout, this, [&]() {
+        if (buttonIsRed) {
+            ui->alertsSelectButton->setStyleSheet("");
+            ui->alertsSelectButton->setStyleSheet("QPushButton { border: none; background: transparent; font-weight: normal; color: white; }");
+        } else {
+            ui->alertsSelectButton->setStyleSheet("QPushButton { border: none; background: red; font-weight: normal; color: white; }");
+        }
+        buttonIsRed = !buttonIsRed;
+    });
+
+    connect(&AlertManager::instance(), &AlertManager::alertRaised, this, &MainWindow::alertRaised);
+
+    ui->alertsSelectButton->setText(QString("Alerts (%1)").arg(DatabaseManager::instance().unackAlertCount()));
+    connect(&DatabaseManager::instance(), &DatabaseManager::alertSaved, this, [&]() {
+        ui->alertsSelectButton->setText(QString("Alerts (%1)").arg(DatabaseManager::instance().unackAlertCount()));
+    });
 
     // Initialize promoted widgets
     ui->page1_alerts->initialize();
@@ -77,4 +101,9 @@ void MainWindow::setActivePage(int index)
             )");
         }
     }
+}
+
+void MainWindow::alertRaised()
+{
+    alertTimer->start(500);
 }

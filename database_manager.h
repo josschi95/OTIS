@@ -30,6 +30,7 @@ public:
     int ruleCount();
     int alertCount();
     int alertCount(Severity severity);
+    int unackAlertCount();
 
 signals:
     void databaseUpdated();
