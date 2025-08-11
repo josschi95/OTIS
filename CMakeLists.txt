@@ -10,13 +10,15 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Network Sql)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Network Sql Charts)
 
 set(PROJECT_SOURCES
         main.cpp
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
+        overview.h
+        overview.cpp
         alerts_page.h
         alerts_page.cpp
         rules_page.h
@@ -27,6 +29,7 @@ set(PROJECT_SOURCES
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 
@@ -76,6 +79,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 
         alert_manager.h alert_manager.cpp
         alerts_page.h alerts_page.cpp
+        overview.h overview.cpp
 
 
     )
@@ -106,7 +110,9 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test_rules.json ${CMAKE_CURRENT_BINAR
 target_link_libraries(OTIS PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt6::Network Qt6::Sql)
 target_link_libraries(OTIS PRIVATE Qt6::Core)
 target_link_libraries(OTIS PRIVATE Qt6::Core Qt6::Widgets)
-target_link_libraries(OTIS PRIVATE Qt6::Core Qt6::Widgets)
+target_link_libraries(OTIS PRIVATE Qt6::Core Qt6::Charts)
+#target_link_libraries(OTIS PRIVATE Qt6::Core Qt6::Widgets)
+#target_link_libraries(OTIS PRIVATE Qt6::Core Qt6::Widgets)
 
 # Should fix issue with promoted widgets
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
