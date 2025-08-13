@@ -28,11 +28,14 @@ TestWindow::TestWindow(QWidget *parent)
 
         QTextStream in(&file);
 
+        int offset = 0;
         while (!in.atEnd()) {
-            QString line = in.readLine().trimmed();
+            QDateTime t = QDateTime::currentDateTime().addSecs(offset * -3600);
+            QString line = in.readLine().trimmed().replace("%1", t.toString(Qt::ISODate));
             if (!line.isEmpty()) {
                 sendTestLog(line.toUtf8());
             }
+            offset++;
         }
 
         file.close();

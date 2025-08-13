@@ -84,7 +84,7 @@ DatabaseManager& DatabaseManager::instance()
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     timestamp TEXT,
                     severity TEXT,
-                    source TEXT,
+                    hostname TEXT,
                     rule_name TEXT,
                     acknowledged BOOLEAN
                 )
@@ -148,17 +148,118 @@ int DatabaseManager::alertCount(Severity severity)
     return 0;
 }
 
+
 int DatabaseManager::unackAlertCount()
 {
     QSqlQuery countQuery;
     countQuery.prepare("SELECT COUNT(*) FROM alerts WHERE acknowledged = :acknowledged");
     countQuery.bindValue(":acknowledged", false);
     if (!countQuery.exec()) {
-        qWarning() << "Alert count query failed: " << countQuery.lastError().text();
+        qWarning() << "unackAlertCount query failed: " << countQuery.lastError().text();
     } else if (countQuery.next()){
         return countQuery.value(0).toInt();
     }
     return 0;
+}
+
+HourlyLogData DatabaseManager::alertCountPerHour()
+{
+    HourlyLogData data;
+    QSqlQuery countQuery;
+    if (!countQuery.exec(R"(
+        SELECT strftime('%Y-%m-%d %H:00:00', timestamp) AS hour_start,
+            COUNT(*) AS log_count
+        FROM alerts
+        WHERE timestamp >= datetime('now', '-24 hours')
+        GROUP BY hour_start
+        ORDER BY hour_start
+    )")) {
+        qWarning() << "alertCountPerHour count query failed: " << countQuery.lastError().text();
+        return data;
+    }
+
+    QMap<QString, int> results;
+    while (countQuery.next()) {
+        QString hour = countQuery.value(0).toString();
+        int count = countQuery.value(1).toInt();
+        results[hour] = count;
+    }
+
+    QDateTime now = QDateTime::currentDateTime();
+    for (int i = 23; i >= 0; --i) {
+        QDateTime hour = now.addSecs(-i * 3600);
+        QString hourKey = hour.toString("yyyy-MM-dd HH:00:00");
+        int count = results.value(hourKey, 0);
+
+        data.hours.append(hour);
+        data.counts.append(count);
+    }
+
+    return data;
+}
+
+QList<int> DatabaseManager::getSeverityCountReport(bool alerts)
+{
+    QSqlQuery query;
+    QString tableName = alerts ? "alerts" : "logs";
+    QString queryString = QString(R"(
+        SELECT severity, COUNT(*) AS alert_count
+        FROM %1
+        WHERE timestamp >= datetime('now', '-24 hours')
+        GROUP BY severity
+        ORDER BY severity
+    )").arg(tableName);
+
+    if (!query.exec(queryString)) {
+        qWarning() << "getSeverityCountReport query failed: " << query.lastError().text();
+        return {};
+    }
+
+    QList<int> list { 0, 0, 0, 0, 0, 0, 0, 0 };
+    while (query.next()) {
+        int severity = query.value("severity").toInt();
+        int count = query.value("alert_count").toInt();
+        list[severity] = count;
+        //qDebug() << "Severity:" << severity << ", Count:" << count;
+    }
+    //qDebug() << list;
+    return list;
+}
+
+QMap<QString, QList<int> > DatabaseManager::getNoisyDevices(bool alerts)
+{
+    QSqlQuery query;
+    QString tableName = alerts ? "alerts" : "logs";
+    QString queryString = QString(R"(
+        WITH SourceTotals AS (
+            SELECT hostname, COUNT(*) AS total_count
+            FROM %1
+            WHERE timestamp >= datetime('now', '-24 hours') AND hostname != 'global'
+            GROUP BY hostname
+            ORDER BY total_count DESC
+            LIMIT 5
+        )
+
+        SELECT totals.hostname, t.severity, COUNT(*) AS alert_count
+        FROM SourceTotals totals
+        JOIN %2 t ON t.hostname = totals.hostname
+        WHERE t.timestamp >= datetime('now', '-24 hours')
+        GROUP BY totals.hostname, t.severity
+        ORDER BY totals.total_count DESC, totals.hostname, t.severity
+    )").arg(tableName, tableName);
+
+    if (!query.exec(queryString)) {
+        qWarning() << "getNoisyDevices query failed: " << query.lastError().text();
+        return {};
+    }
+
+    while (query.next()) {
+        QString hostname = query.value("hostname").toString();
+        int severity = query.value("severity").toInt();
+        int count = query.value("alert_count").toInt();
+        qDebug() << "Source:" << hostname << ", Severity:" << severity << ", Count:" << count;
+    }
+    return {};
 }
 
 /********** Logs **********/
@@ -582,7 +683,7 @@ QList<std::shared_ptr<Alert>> DatabaseManager::loadAlerts()
     QSqlQuery query;
     if (!query.exec(R"(SELECT
         id, timestamp, severity,
-        source, rule_name, acknowledged
+        hostname, rule_name, acknowledged
         FROM alerts
     )")) {
         qWarning() << "Database alerts query failed: " << query.lastError().text();
@@ -612,7 +713,7 @@ QList<QStringList> DatabaseManager::queryAlerts()
 {
     QSqlQuery alertsQuery;
     if (!alertsQuery.exec(R"(SELECT
-        severity, timestamp, rule_name, source,
+        severity, timestamp, rule_name, hostname,
         acknowledged, id
         FROM alerts
         ORDER BY timestamp DESC
@@ -635,7 +736,7 @@ QStringList DatabaseManager::getAlertRow(const QSqlQuery& query)
     row << severityStrings[query.value(0).toInt()]; // severity
     row << query.value(1).toString(); // timestamp
     row << query.value(2).toString(); // rule_name
-    row << query.value(3).toString(); // source
+    row << query.value(3).toString(); // hostname
     row << query.value(4).toString(); // acknowledged
     row << query.value(5).toString(); // id
     return row;
@@ -655,12 +756,12 @@ void DatabaseManager::saveAlert(std::shared_ptr<Alert> alert)
         query.bindValue(":id", alert->id);
     } else { // Storing a new alert
         query.prepare(R"(
-            INSERT INTO alerts (timestamp, severity, source, rule_name, acknowledged)
-            VALUES (:timestamp, :severity, :source, :rule_name, :acknowledged)
+            INSERT INTO alerts (timestamp, severity, hostname, rule_name, acknowledged)
+            VALUES (:timestamp, :severity, :hostname, :rule_name, :acknowledged)
         )");
         query.bindValue(":timestamp", alert->timestamp.toString(Qt::ISODate));
         query.bindValue(":severity", static_cast<int>(alert->severity));
-        query.bindValue(":source", alert->source);
+        query.bindValue(":hostname", alert->source);
         query.bindValue(":rule_name", alert->ruleName);
     }
     query.bindValue(":acknowledged", alert->acknowledged);

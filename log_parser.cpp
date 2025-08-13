@@ -46,13 +46,13 @@ LogParser::LogParser(QObject *parent) : QObject(parent)
 //TODO: I think this is old...?
 QDateTime LogParser::parseTimestamp(const QString& ts, const QString& format) const {
     if (format.toLower() == "iso8601") {
-        return QDateTime::fromString(ts, Qt::ISODate);
+        return QDateTime::fromString(ts, Qt::ISODate).toLocalTime();
     } else if (format.toLower() == "rfc2822") {
-        return QDateTime::fromString(ts, Qt::RFC2822Date);
+        return QDateTime::fromString(ts, Qt::RFC2822Date).toLocalTime();
     } else if (format.toLower() == "textdate") {
-        return QDateTime::fromString(ts, Qt::TextDate);
+        return QDateTime::fromString(ts, Qt::TextDate).toLocalTime();
     }
-    return QDateTime::fromString(ts, format);
+    return QDateTime::fromString(ts, format).toLocalTime();
 }
 
 
@@ -93,7 +93,15 @@ LogEntry LogParser::parse(const QString &line)
             entry.severity = priority % 8;
             entry.facility = priority / 8;
             //entry.version = match.captured("version").toInt();
-            entry.timestamp = parseTimestamp(match.captured("timestamp"), format.dateFormat).toString();
+
+            // RFC 3164 log standard does not include a year, so it's gonna show 1900
+            auto timestamp = parseTimestamp(match.captured("timestamp"), format.dateFormat);
+            if (timestamp.date().year() == 1900) {
+                int y = QDate::currentDate().year();
+                timestamp.setDate(QDate(y, timestamp.date().month(), timestamp.date().day()));
+            }
+            entry.timestamp = timestamp.toString(Qt::ISODate);
+
             entry.hostname = match.captured("hostname");
             entry.appname = match.captured("app_name");
             entry.procid = match.captured("procid");

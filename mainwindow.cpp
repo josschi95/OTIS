@@ -41,13 +41,13 @@ MainWindow::MainWindow(QWidget *parent)
         ui->alertsSelectButton->setText(QString("Alerts (%1)").arg(DatabaseManager::instance().unackAlertCount()));
     });
 
+    onTestWindowButtonClicked(); // TESTING
+
     // Initialize promoted widgets
     ui->page0_overview->initialize();
     ui->page1_alerts->initialize();
     ui->page2_rules->initialize();
     ui->page3_logs->initialize();
-
-    onTestWindowButtonClicked();
 }
 
 

@@ -32,6 +32,10 @@ public:
     int alertCount(Severity severity);
     int unackAlertCount();
 
+    HourlyLogData alertCountPerHour();
+    QList<int> getSeverityCountReport(bool alerts);
+    QMap<QString, QList<int>> getNoisyDevices(bool alerts);
+
 signals:
     void databaseUpdated();
     void logInserted(const QStringList& row);

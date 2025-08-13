@@ -19,8 +19,10 @@ public:
     explicit Overview(QWidget *parent = nullptr);
     void initialize();
 
-
-signals:
+private slots:
+    void updateAlertCharts();
+    void updateLogCharts();
+    void updateAlertTimeline();
 
 private:
     bool initialized = false;

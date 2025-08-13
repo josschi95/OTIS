@@ -147,8 +147,8 @@ void RuleManager::checkRules(const LogEntry& log)
 
             // Check if the threshold has been exceeded within the time window
             int count = timestamps.size();
-            if (group.rule->triggerCondition == ComparisonOperator::gt && count > group.rule->thresholdCount) ruleViolated(group.rule, host);
-            if (group.rule->triggerCondition == ComparisonOperator::gte && count >= group.rule->thresholdCount) ruleViolated(group.rule, host);
+            if (group.rule->triggerCondition == ComparisonOperator::gt && count > group.rule->thresholdCount) ruleViolated(group.rule, log.hostname);
+            if (group.rule->triggerCondition == ComparisonOperator::gte && count >= group.rule->thresholdCount) ruleViolated(group.rule, log.hostname);
         }
 
         // Not time-based, Generate Alert

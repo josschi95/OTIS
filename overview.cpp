@@ -3,6 +3,8 @@
 
 #include "overview.h"
 #include "enums.h"
+#include "database_manager.h"
+#include "logs.h"
 
 Overview::Overview(QWidget *parent) : QWidget{parent} {}
 
@@ -16,6 +18,9 @@ void Overview::initialize()
     if (initialized) return;
     initialized = true;
 
+    // Probably would be an issue if there are a lot of logs coming in?
+    connect(&DatabaseManager::instance(), &DatabaseManager::logInserted, this, &Overview::updateAlertTimeline);
+
     { // Alerts By Severity
         alertsBySeveritySeries = new QPieSeries();
         alertsBySeveritySeries->setHoleSize(0.5);
@@ -27,6 +32,7 @@ void Overview::initialize()
         alertsBySeveritySeries->append("Notice", 5);
         alertsBySeveritySeries->append("Informational", 6);
         alertsBySeveritySeries->append("Debug", 7);
+
 
         alertsBySeveritySeries->setLabelsVisible(false);
         for (auto slice : alertsBySeveritySeries->slices()) {
@@ -133,7 +139,7 @@ void Overview::initialize()
         QChart *logsBySeverityChart = new QChart();
         logsBySeverityChart->addSeries(logsBySeveritySeries);
         logsBySeverityChart->legend()->setVisible(true);
-        logsBySeverityChart->setTitle("Alerts by Severity");
+        logsBySeverityChart->setTitle("Logs by Severity");
         logsBySeverityChart->setTheme(QChart::ChartThemeDark);
         logsBySeverityChart->legend()->setAlignment(Qt::AlignLeft);
         logsBySeverityChart->setAnimationOptions(QChart::SeriesAnimations);
@@ -204,15 +210,6 @@ void Overview::initialize()
 
     { // Alert Timeline
         alertTimelineSeries = new QLineSeries();
-
-        auto now = QDateTime::currentDateTime();
-        auto rng = new QRandomGenerator();
-        for (int i = 0; i < 24; ++i) {
-            QDateTime t = now.addSecs(-3600 * (23 - i));
-            auto value = rng->bounded(100);
-            alertTimelineSeries->append(t.toMSecsSinceEpoch(), value);
-        }
-
         QChart *alertTimelineChart = new QChart();
         alertTimelineChart->addSeries(alertTimelineSeries);
         alertTimelineChart->setTitle("Alert Timeline");
@@ -220,6 +217,8 @@ void Overview::initialize()
         alertTimelineChart->legend()->setAlignment(Qt::AlignRight);
         alertTimelineChart->setBackgroundVisible(false);
         alertTimelineChart->setMargins(QMargins(5, 5, 5, 5));
+
+        updateAlertTimeline();
 
         QDateTimeAxis *axisX = new QDateTimeAxis;
         axisX->setFormat("hh");
@@ -243,5 +242,38 @@ void Overview::initialize()
         QWidget *w5 = this->findChild<QWidget*>("alertTimeline");
         QVBoxLayout *l5 = new QVBoxLayout(w5);
         l5->addWidget(chartView);
+    }
+
+    updateAlertCharts();
+    updateLogCharts();
+}
+
+void Overview::updateAlertCharts()
+{
+    QList<int> alertCounts = DatabaseManager::instance().getSeverityCountReport(true);
+    for (int i = 0; i < alertCounts.size(); ++i) {
+        alertsBySeveritySeries->slices()[i]->setValue(alertCounts[i]);
+    }
+
+    auto noisyAlerts = DatabaseManager::instance().getNoisyDevices(true);
+}
+
+void Overview::updateLogCharts()
+{
+    QList<int> logCounts = DatabaseManager::instance().getSeverityCountReport(false);
+    for (int i = 0; i < logCounts.size(); ++i) {
+        logsBySeveritySeries->slices()[i]->setValue(logCounts[i]);
+    }
+
+    //auto noisyLogs = DatabaseManager::instance().getNoisyDevices(false);
+}
+
+
+void Overview::updateAlertTimeline()
+{
+    HourlyLogData logs = DatabaseManager::instance().alertCountPerHour();
+    for (int i = 0; i < logs.hours.size(); ++i) {
+        alertTimelineSeries->append(logs.hours[i].toMSecsSinceEpoch(), logs.counts[i]);
+        //qDebug() << logs.hours[i] << " : " << logs.counts[i];
     }
 }

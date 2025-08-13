@@ -43,3 +43,8 @@ struct LogFilters {
     // structured data ?
     QString messageFilter = QString();
 };
+
+struct HourlyLogData {
+    QList<QDateTime> hours;
+    QList<int> counts;
+};
