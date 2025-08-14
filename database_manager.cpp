@@ -172,8 +172,8 @@ HourlyLogData DatabaseManager::alertCountPerHour()
         FROM alerts
         WHERE timestamp >= datetime('now', '-24 hours')
         GROUP BY hour_start
-        ORDER BY hour_start
-    )")) {
+        ORDER BY timestamp ASC
+    )")) { //ORDER BY hour_start
         qWarning() << "alertCountPerHour count query failed: " << countQuery.lastError().text();
         return data;
     }
@@ -226,7 +226,7 @@ QList<int> DatabaseManager::getSeverityCountReport(bool alerts)
     return list;
 }
 
-QMap<QString, QList<int> > DatabaseManager::getNoisyDevices(bool alerts)
+QMap<QString, QList<int>> DatabaseManager::getNoisyDevices(bool alerts)
 {
     QSqlQuery query;
     QString tableName = alerts ? "alerts" : "logs";
@@ -253,13 +253,20 @@ QMap<QString, QList<int> > DatabaseManager::getNoisyDevices(bool alerts)
         return {};
     }
 
+    QMap<QString, QList<int>> map;
     while (query.next()) {
         QString hostname = query.value("hostname").toString();
+        if (!map.contains(hostname)) {
+            map[hostname] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+        }
+
         int severity = query.value("severity").toInt();
         int count = query.value("alert_count").toInt();
-        qDebug() << "Source:" << hostname << ", Severity:" << severity << ", Count:" << count;
+        map[hostname][severity] = count;
+
+        //qDebug() << "Source:" << hostname << ", Severity:" << severity << ", Count:" << count;
     }
-    return {};
+    return map;
 }
 
 /********** Logs **********/
@@ -650,7 +657,7 @@ QStringList DatabaseManager::getRuleRow(const QSqlQuery& query)
     // threshold=18, timeWindow=19, threshOp=20
     int thresh = query.value(18).toInt();
     if (thresh >= 0) {
-        row << QString(query.value(20).toString() + " " + QString::number(thresh) + " in " + query.value(19).toString());
+        row << QString(opStrings[query.value(20).toInt()] + " " + QString::number(thresh) + " in " + query.value(19).toString());
     } else {
         row << "-";
     }

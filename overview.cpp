@@ -19,7 +19,8 @@ void Overview::initialize()
     initialized = true;
 
     // Probably would be an issue if there are a lot of logs coming in?
-    connect(&DatabaseManager::instance(), &DatabaseManager::logInserted, this, &Overview::updateAlertTimeline);
+    connect(&DatabaseManager::instance(), &DatabaseManager::alertSaved, this, &Overview::updateAlertCharts);
+    connect(&DatabaseManager::instance(), &DatabaseManager::logInserted, this, &Overview::updateLogCharts);
 
     { // Alerts By Severity
         alertsBySeveritySeries = new QPieSeries();
@@ -74,18 +75,20 @@ void Overview::initialize()
         }
 
         // Example data — each severity set gets one value per device
-        severitySets[static_cast<int>(Severity::Emergency)]->append({5, 2, 1, 3, 1});
-        severitySets[static_cast<int>(Severity::Alert)]->append({3, 1, 0, 6, 3});
-        severitySets[static_cast<int>(Severity::Critical)]->append({6, 3, 4, 10, 5});
-        severitySets[static_cast<int>(Severity::Error)]->append({10, 5, 2, 4, 4});
-        severitySets[static_cast<int>(Severity::Warning)]->append({4, 4, 3, 1, 0});
-        severitySets[static_cast<int>(Severity::Notice)]->append({1, 0, 2, 7, 6});
-        severitySets[static_cast<int>(Severity::Informational)]->append({7, 6, 3, 2, 1});
-        severitySets[static_cast<int>(Severity::Debug)]->append({2, 1, 5, 5, 2});
+        severitySets[static_cast<int>(Severity::Emergency)]->append({0, 0, 0, 0, 0});
+        severitySets[static_cast<int>(Severity::Alert)]->append({0, 0, 0, 0, 0});
+        severitySets[static_cast<int>(Severity::Critical)]->append({0, 0, 0, 0, 0});
+        severitySets[static_cast<int>(Severity::Error)]->append({0, 0, 0, 0, 0});
+        severitySets[static_cast<int>(Severity::Warning)]->append({0, 0, 0, 0, 0});
+        severitySets[static_cast<int>(Severity::Notice)]->append({0, 0, 0, 0, 0});
+        severitySets[static_cast<int>(Severity::Informational)]->append({0, 0, 0, 0, 0});
+        severitySets[static_cast<int>(Severity::Debug)]->append({0, 0, 0, 0, 0});
 
         for (auto *set : severitySets) {
             alertsByDeviceSeries->append(set);
         }
+
+
 
         QChart *alertsByDeviceChart = new QChart();
         alertsByDeviceChart->addSeries(alertsByDeviceSeries);
@@ -97,6 +100,8 @@ void Overview::initialize()
         alertsByDeviceChart->setVisible(true);
 
         QValueAxis *axisX = new QValueAxis();
+        axisX->setMin(0);
+        axisX->setMax(20);
         axisX->setTitleText("Alert Count");
         QBarCategoryAxis *axisY = new QBarCategoryAxis();
         axisY->append({"Device01", "Device02", "Device03", "Device04", "Device05"});
@@ -166,14 +171,14 @@ void Overview::initialize()
         }
 
         // Example data — each severity set gets one value per device
-        severitySets[static_cast<int>(Severity::Emergency)]->append({50, 20, 10, 30, 10});
-        severitySets[static_cast<int>(Severity::Alert)]->append({30, 10, 00, 60, 30});
-        severitySets[static_cast<int>(Severity::Critical)]->append({60, 30, 40, 100, 50});
-        severitySets[static_cast<int>(Severity::Error)]->append({100, 50, 20, 40, 40});
-        severitySets[static_cast<int>(Severity::Warning)]->append({40, 40, 30, 10, 0});
-        severitySets[static_cast<int>(Severity::Notice)]->append({10, 0, 20, 70, 60});
-        severitySets[static_cast<int>(Severity::Informational)]->append({70, 60, 30, 20, 10});
-        severitySets[static_cast<int>(Severity::Debug)]->append({20, 10, 50, 50, 20});
+        severitySets[static_cast<int>(Severity::Emergency)]->append({0, 0, 0, 0, 0});
+        severitySets[static_cast<int>(Severity::Alert)]->append({0, 0, 0, 0, 0});
+        severitySets[static_cast<int>(Severity::Critical)]->append({0, 0, 0, 0, 0});
+        severitySets[static_cast<int>(Severity::Error)]->append({0, 0, 0, 0, 0});
+        severitySets[static_cast<int>(Severity::Warning)]->append({0, 0, 0, 0, 0});
+        severitySets[static_cast<int>(Severity::Notice)]->append({0, 0, 0, 0, 0});
+        severitySets[static_cast<int>(Severity::Informational)]->append({0, 0, 0, 0, 0});
+        severitySets[static_cast<int>(Severity::Debug)]->append({0, 0, 0, 0, 0});
 
         for (auto *set : severitySets) {
             logsByDeviceSeries->append(set);
@@ -189,6 +194,8 @@ void Overview::initialize()
         logsByDeviceChart->setVisible(true);
 
         QValueAxis *axisX = new QValueAxis();
+        axisX->setMin(0);
+        axisX->setMax(100);
         axisX->setTitleText("Log Count");
         QBarCategoryAxis *axisY = new QBarCategoryAxis();
         axisY->append({"Device01", "Device02", "Device03", "Device04", "Device05"});
@@ -213,7 +220,7 @@ void Overview::initialize()
         QChart *alertTimelineChart = new QChart();
         alertTimelineChart->addSeries(alertTimelineSeries);
         alertTimelineChart->setTitle("Alert Timeline");
-        alertTimelineChart->legend()->setVisible(true);
+        alertTimelineChart->legend()->setVisible(false);
         alertTimelineChart->legend()->setAlignment(Qt::AlignRight);
         alertTimelineChart->setBackgroundVisible(false);
         alertTimelineChart->setMargins(QMargins(5, 5, 5, 5));
@@ -232,6 +239,7 @@ void Overview::initialize()
         QValueAxis *axisY = new QValueAxis;
         axisY->setLabelFormat("%i");
         axisY->setTitleText("Alerts");
+        axisY->setMax(20);
         alertTimelineChart->addAxis(axisY, Qt::AlignLeft);
         alertTimelineSeries->attachAxis(axisY);
 
@@ -250,28 +258,87 @@ void Overview::initialize()
 
 void Overview::updateAlertCharts()
 {
+    // Line Chart
+    updateAlertTimeline();
+
+    // Pie Chart
     QList<int> alertCounts = DatabaseManager::instance().getSeverityCountReport(true);
+    auto slices = alertsBySeveritySeries->slices();
     for (int i = 0; i < alertCounts.size(); ++i) {
-        alertsBySeveritySeries->slices()[i]->setValue(alertCounts[i]);
+        slices[i]->setValue(alertCounts[i]);
     }
 
+    // Bar Chart
     auto noisyAlerts = DatabaseManager::instance().getNoisyDevices(true);
+
+    QStringList hostnames;
+    int index = 0;
+    //int max = 0;
+    auto it = noisyAlerts.begin();
+    auto sets = alertsByDeviceSeries->barSets();
+    while (it != noisyAlerts.end()) {
+        hostnames << it.key();
+        for (int i = 0; i < it.value().size(); ++i) {
+            sets[i]->replace(index, it.value()[i]);
+            //if (it.value()[i] > max) max = it.value()[i];
+        }
+
+        index++;
+        it++;
+    }
+
+    auto axes = alertsByDeviceSeries->attachedAxes();
+    //QValueAxis *valAxis = static_cast<QValueAxis*>(axes[0]);
+    QBarCategoryAxis *catAxis = static_cast<QBarCategoryAxis*>(axes[1]);
+    catAxis->clear();
+    catAxis->append(hostnames);
+    //valAxis->setMax(max);
 }
 
 void Overview::updateLogCharts()
 {
+    // Pie Chart
     QList<int> logCounts = DatabaseManager::instance().getSeverityCountReport(false);
+    auto slices = logsBySeveritySeries->slices();
     for (int i = 0; i < logCounts.size(); ++i) {
-        logsBySeveritySeries->slices()[i]->setValue(logCounts[i]);
+        slices[i]->setValue(logCounts[i]);
     }
 
-    //auto noisyLogs = DatabaseManager::instance().getNoisyDevices(false);
+    // Bar Chart
+    auto noisyLogs = DatabaseManager::instance().getNoisyDevices(false);
+
+    QStringList hostnames;
+    int index = 0;
+    //int max = 0;
+    auto it = noisyLogs.begin();
+    auto sets = logsByDeviceSeries->barSets();
+    while (it != noisyLogs.end()) {
+        hostnames << it.key();
+        for (int i = 0; i < it.value().size(); ++i) {
+            sets[i]->replace(index, it.value()[i]);
+            //if (it.value()[i] > max) max = it.value()[i];
+        }
+
+        //qDebug() << it.key() << ": " << it.value();
+        index++;
+        it++;
+    }
+
+    auto axes = logsByDeviceSeries->attachedAxes();
+    //QValueAxis *valAxis = static_cast<QValueAxis*>(axes[0]);
+    QBarCategoryAxis *catAxis = static_cast<QBarCategoryAxis*>(axes[1]);
+    catAxis->clear();
+    catAxis->append(hostnames);
+
+    //valAxis->setMax(max);
 }
 
 
 void Overview::updateAlertTimeline()
 {
+    alertTimelineSeries->clear();
     HourlyLogData logs = DatabaseManager::instance().alertCountPerHour();
+
     for (int i = 0; i < logs.hours.size(); ++i) {
         alertTimelineSeries->append(logs.hours[i].toMSecsSinceEpoch(), logs.counts[i]);
         //qDebug() << logs.hours[i] << " : " << logs.counts[i];

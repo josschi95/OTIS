@@ -68,6 +68,7 @@ TestWindow::TestWindow(QWidget *parent)
 
     //QDateTime& ts, Severity se, const QString& so, const QString& rn
     if (DatabaseManager::instance().alertCount() == 0) { // TESTING
+        qDebug() << "Adding filler alert";
         auto alert1 = std::make_shared<Alert>(
             QDateTime::currentDateTime(),
             Severity::Alert,
